@@ -15,6 +15,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,15 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.0" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
-    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
