@@ -1,0 +1,29 @@
+name: Publish Dsr.Architecture.Infrastructure.Persistence.Mongo to NuGet (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/Dsr.Architecture.Infrastructure.Persistence.Mongo/Dsr.Architecture.Infrastructure.Persistence.Mongo.csproj
+
+      - name: Build
+        run: dotnet build src/Dsr.Architecture.Infrastructure.Persistence.Mongo/Dsr.Architecture.Infrastructure.Persistence.Mongo.csproj --configuration Release --no-restore
+
+      - name: Pack
+        run: dotnet pack src/Dsr.Architecture.Infrastructure.Persistence.Mongo/Dsr.Architecture.Infrastructure.Persistence.Mongo.csproj --configuration Release --no-build -o nupkgs --version-suffix "build.${{ github.run_number }}"
+
+      - name: Publish to NuGet
+        run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
