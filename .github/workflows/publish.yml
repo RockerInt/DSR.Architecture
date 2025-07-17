@@ -27,6 +27,10 @@ jobs:
               - 'src/Dsr.Architecture.Infrastructure.Persistence/**'
             Dsr.Architecture.Infrastructure.Persistence.Mongo:
               - 'src/Dsr.Architecture.Infrastructure.Persistence.Mongo/**'
+            Dsr.Architecture.Infrastructure.Persistence.SqlLite:
+              - 'src/Dsr.Architecture.Infrastructure.Persistence.SqlLite/**'
+            Dsr.Architecture.Infrastructure.Persistence.SqlServer:
+              - 'src/Dsr.Architecture.Infrastructure.Persistence.SqlServer/**'
             Dsr.Architecture.Infrastructure.Provider:
               - 'src/Dsr.Architecture.Infrastructure.Provider/**'
             Dsr.Architecture.TryCatch:
@@ -58,7 +62,7 @@ jobs:
         run: dotnet build src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release --no-restore
 
       - name: Pack
-        run: dotnet pack src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release --no-build -o nupkgs
+        run: dotnet pack src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release --no-build -o nupkgs --version-suffix "build.${{ github.run_number }}"
 
       - name: Publish to NuGet
         run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
