@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Jonathan Jimenez</Authors>
+    <Company>Jonathan Jimenez</Company>
+    <Description>
+      Utility library for DSR.Architecture. Contains a collection of utility classes and extension methods for web-related tasks, such as making HTTP requests and handling JSON serialization, as well as other general-purpose utilities.
+    </Description>
+    <PackageTags>utility;web;http;json;helpers;architecture;modular;enterprise;dsr-architecture</PackageTags>
+    <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

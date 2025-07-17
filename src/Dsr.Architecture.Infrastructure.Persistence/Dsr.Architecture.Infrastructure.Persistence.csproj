@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Jonathan Jimenez</Authors>
+    <Company>Jonathan Jimenez</Company>
+    <Description>
+      Application layer for DSR.Architecture. Implements use cases, application services, validation, and orchestration of domain logic. 
+      Bridges the domain model with external interfaces and coordinates business processes in a modular, scalable enterprise solution.
+    </Description>
+    <PackageTags>application-layer;use-cases;services;validation;orchestration;architecture;enterprise;modular;dsr-architecture</PackageTags>
+    <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
+    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

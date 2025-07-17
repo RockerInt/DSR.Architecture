@@ -1,0 +1,64 @@
+name: Publish to NuGet
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Find changed projects
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            Dsr.Architecture.Application:
+              - 'src/Dsr.Architecture.Application/**'
+            Dsr.Architecture.Domain:
+              - 'src/Dsr.Architecture.Domain/**'
+            Dsr.Architecture.Infrastructure.Persistence:
+              - 'src/Dsr.Architecture.Infrastructure.Persistence/**'
+            Dsr.Architecture.Infrastructure.Persistence.Mongo:
+              - 'src/Dsr.Architecture.Infrastructure.Persistence.Mongo/**'
+            Dsr.Architecture.Infrastructure.Provider:
+              - 'src/Dsr.Architecture.Infrastructure.Provider/**'
+            Dsr.Architecture.TryCatch:
+              - 'src/Dsr.Architecture.TryCatch/**'
+            Dsr.Architecture.Utilities:
+              - 'src/Dsr.Architecture.Utilities/**'
+
+  build-and-publish:
+    needs: changes
+    if: ${{ needs.changes.outputs.projects != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJSON(needs.changes.outputs.projects) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
+
+      - name: Build
+        run: dotnet build src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release --no-restore
+
+      - name: Pack
+        run: dotnet pack src/${{ matrix.project }}/${{ matrix.project }}.csproj --configuration Release --no-build -o nupkgs
+
+      - name: Publish to NuGet
+        run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"

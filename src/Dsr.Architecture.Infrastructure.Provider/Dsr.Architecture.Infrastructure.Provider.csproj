@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Jonathan Jimenez</Authors>
+    <Company>Jonathan Jimenez</Company>
+    <Description>
+      Infrastructure provider library for DSR.Architecture. Contains a client for making RESTful API calls, abstracting the complexities of HTTP communication and providing a simple and consistent way to interact with external services.
+    </Description>
+    <PackageTags>infrastructure;provider;rest-client;http;api;architecture;modular;enterprise;dsr-architecture</PackageTags>
+    <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
+    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

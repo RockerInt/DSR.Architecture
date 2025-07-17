@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Jonathan Jimenez</Authors>
+    <Company>Jonathan Jimenez</Company>
+    <Description>
+      SQLite persistence library for DSR.Architecture. Provides repository implementations and data access patterns for SQLite, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
+    </Description>
+    <PackageTags>infrastructure;persistence;sqlite;repository;data-access;storage;architecture;modular;enterprise;dsr-architecture</PackageTags>
+    <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dsr.Architecture.Infrastructure.Persistence\Dsr.Architecture.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
+    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
+  </ItemGroup>
+
+</Project>

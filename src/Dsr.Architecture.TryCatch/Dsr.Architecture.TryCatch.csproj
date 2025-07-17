@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Authors>Jonathan Jimenez</Authors>
+    <Company>Jonathan Jimenez</Company>
+    <Description>
+      Utility library for DSR.Architecture. Provides a fluent and expressive way to handle exceptions, improving code readability and maintainability.
+    </Description>
+    <PackageTags>utility;exception-handling;try-catch;fluent-api;architecture;modular;enterprise;dsr-architecture</PackageTags>
+    <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>

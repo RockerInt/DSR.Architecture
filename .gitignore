@@ -1,0 +1,57 @@
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+Log/
+
+# Visual Studio
+.vs/
+*.csproj.user
+*.vbproj.user
+*.fsproj.user
+*.esproj.user
+*.sfproj.user
+*.njsproj.user
+*.sln.ide
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet packages
+*.nupkg
+*.snupkg
+/packages/
+*.nuget.props
+*.nuget.targets
+
+# Dotnet files
+project.lock.json
+project.assets.json
+*.nuget.cache
+
+# Mac/Linux files
+.DS_Store
+*~
+
+# Test results
+/TestResults/
+/coveragereport/
+*.trx
+*.coverlet.json
+*.codecov.xml
+
+# Build artifacts from the new pipeline
+nupkgs/
