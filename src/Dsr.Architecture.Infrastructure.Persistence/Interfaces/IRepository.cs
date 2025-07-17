@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 namespace Dsr.Architecture.Infrastructure.Persistence.Interfaces;
 
 /// <summary>
-/// Generic interface for persistence operations on entities.
-/// Provides methods for search, insertion, update, and deletion.
+/// Defines a generic repository interface for common data access operations on entities.
+/// Provides methods for searching, inserting, updating, and deleting entities.
 /// </summary>
-/// <typeparam name="TId">Type of the entity's unique identifier.</typeparam>
-/// <typeparam name="TEntity">Type of the entity.</typeparam>
+/// <typeparam name="TId">The type of the entity's unique identifier.</typeparam>
+/// <typeparam name="TEntity">The type of the entity managed by this repository.</typeparam>
 public interface IRepository<TId, TEntity> 
     where TId : IEquatable<TId>, IComparable<TId>
     where TEntity : Entity<TId>, IEntity<TId>
@@ -17,66 +17,106 @@ public interface IRepository<TId, TEntity>
     #region Search
 
     /// <summary>
-    /// Allows obtaining an IQueryable query over the entity.
+    /// Provides an <see cref="IQueryable{TEntity}"/> for building complex queries against the entity collection.
     /// </summary>
+    /// <returns>An <see cref="IQueryable{TEntity}"/> instance.</returns>
     IQueryable<TEntity> AsQueryable();
 
     /// <summary>
-    /// Filters entities according to an expression and returns the result.
+    /// Asynchronously retrieves all entities from the repository.
     /// </summary>
-    Task<Result<IEnumerable<TEntity>>> FilterBy(
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all entities.</returns>
+    Task<Result<IEnumerable<TEntity>>> GetAll(CancellationToken cancellationToken = new());
+
+    /// <summary>
+    /// Asynchronously retrieves entities that match the specified filter expression.
+    /// </summary>
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching entities.</returns>
+    Task<Result<IEnumerable<TEntity>>> GetBy(
         Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Filters entities and projects the result to another type.
+    /// Asynchronously retrieves and projects entities that match the specified filter expression to a different type.
     /// </summary>
-    Task<Result<IEnumerable<TProjected>>> FilterBy<TProjected>(
+    /// <typeparam name="TProjected">The type to project the entities to.</typeparam>
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <param name="projectionExpression">An expression to project the filtered entities to <typeparamref name="TProjected"/>.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of projected entities.</returns>
+    Task<Result<IEnumerable<TProjected>>> GetBy<TProjected>(
         Expression<Func<TEntity, bool>> filterExpression,
         Expression<Func<TEntity, TProjected>> projectionExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Finds an entity that matches the given expression.
+    /// Asynchronously finds the first entity that matches the given filter expression.
     /// </summary>
-    Task<Result<TEntity>> FindOne(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching entity.</returns>
+    Task<Result<TEntity>> First(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Finds an entity by its identifier.
+    /// Asynchronously retrieves an entity by its unique identifier.
     /// </summary>
-    Task<Result<TEntity>> FindById(TId id, CancellationToken cancellationToken = new());
+    /// <param name="id">The unique identifier of the entity to retrieve.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved entity.</returns>
+    Task<Result<TEntity>> GetById(TId id, CancellationToken cancellationToken = new());
 
     #endregion Search
 
     #region CUD
 
     /// <summary>
-    /// Inserts a new entity.
+    /// Asynchronously adds a new entity to the repository.
     /// </summary>
-    Task<ResultSimple> InsertOne(TEntity entity, CancellationToken cancellationToken = new());
+    /// <param name="entity">The entity to be added.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> Add(TEntity entity, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Inserts multiple entities.
+    /// Asynchronously adds multiple new entities to the repository.
     /// </summary>
-    Task<ResultSimple> InsertMany(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
+    /// <param name="entities">A collection of entities to be added.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> AddMany(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Updates an existing entity.
+    /// Asynchronously updates an existing entity in the repository.
     /// </summary>
-    Task<ResultSimple> UpdateOne(TEntity entity, CancellationToken cancellationToken = new());
+    /// <param name="entity">The entity to be updated.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> Update(TEntity entity, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Deletes an entity according to a filter expression.
+    /// Asynchronously removes entities from the repository based on a filter expression.
     /// </summary>
-    Task<ResultSimple> DeleteOne(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> Remove(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Deletes an entity by its identifier.
+    /// Asynchronously removes an entity from the repository by its unique identifier.
     /// </summary>
-    Task<ResultSimple> DeleteById(TId id, CancellationToken cancellationToken = new());
+    /// <param name="id">The unique identifier of the entity to be removed.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> RemoveById(TId id, CancellationToken cancellationToken = new());
 
     /// <summary>
-    /// Deletes multiple entities according to a filter expression.
+    /// Asynchronously removes multiple entities from the repository based on a filter expression.
     /// </summary>
-    Task<ResultSimple> DeleteMany(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
+    Task<ResultSimple> RemoveMany(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     #endregion CUD
 }

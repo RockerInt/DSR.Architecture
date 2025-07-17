@@ -23,7 +23,7 @@ jobs:
         run: dotnet build src/Dsr.Architecture.Infrastructure.Persistence.SqlLite/Dsr.Architecture.Infrastructure.Persistence.SqlLite.csproj --configuration Release --no-restore
 
       - name: Pack
-        run: dotnet pack src/Dsr.Architecture.Infrastructure.Persistence.SqlLite/Dsr.Architecture.Infrastructure.Persistence.SqlLite.csproj --configuration Release --no-build -o nupkgs --version-suffix "build.${{ github.run_number }}"
+        run: dotnet pack src/Dsr.Architecture.Infrastructure.Persistence.SqlLite/Dsr.Architecture.Infrastructure.Persistence.SqlLite.csproj --configuration Release --no-build -o nupkgs --version-suffix "${{ github.run_number }}"
 
       - name: Publish to NuGet
         run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
