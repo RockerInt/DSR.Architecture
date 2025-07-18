@@ -10,11 +10,13 @@ namespace Dsr.Architecture.Infrastructure.Persistence.Interfaces;
 /// </summary>
 /// <typeparam name="TId">The type of the entity's unique identifier.</typeparam>
 /// <typeparam name="TEntity">The type of the entity managed by this repository.</typeparam>
-public interface IRepository<TId, TEntity> 
+public interface IRepository<TId, TEntity>
     where TId : IEquatable<TId>, IComparable<TId>
     where TEntity : Entity<TId>, IEntity<TId>
 {
     #region Search
+
+    #region Sync
 
     /// <summary>
     /// Provides an <see cref="IQueryable{TEntity}"/> for building complex queries against the entity collection.
@@ -23,11 +25,54 @@ public interface IRepository<TId, TEntity>
     IQueryable<TEntity> AsQueryable();
 
     /// <summary>
+    /// Retrieves all entities from the repository.
+    /// </summary>
+    /// <returns>A <see cref="Result{T}"/> with a collection of all entities.</returns>
+    Result<IEnumerable<TEntity>> GetAll();
+
+    /// <summary>
+    /// Retrieves entities that match the specified filter expression.
+    /// </summary>
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <returns>A <see cref="Result{T}"/> with a collection of matching entities.</returns>
+    Result<IEnumerable<TEntity>> GetBy(
+        Expression<Func<TEntity, bool>> filterExpression);
+
+    /// <summary>
+    /// Retrieves and projects entities that match the specified filter expression to a different type.
+    /// </summary>
+    /// <typeparam name="TProjected">The type to project the entities to.</typeparam>
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <param name="projectionExpression">An expression to project the filtered entities to <typeparamref name="TProjected"/>.</param>
+    /// <returns>A <see cref="Result{T}"/> with a collection of projected entities.</returns>
+    Result<IEnumerable<TProjected>> GetBy<TProjected>(
+        Expression<Func<TEntity, bool>> filterExpression,
+        Expression<Func<TEntity, TProjected>> projectionExpression);
+
+    /// <summary>
+    /// Finds the first entity that matches the given filter expression.
+    /// </summary>
+    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <returns>A <see cref="Result{T}"/> with the first matching entity.</returns>
+    Result<TEntity> First(Expression<Func<TEntity, bool>> filterExpression);
+
+    /// <summary>
+    /// Retrieves an entity by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the entity to retrieve.</param>
+    /// <returns>A <see cref="Result{T}"/> with the retrieved entity.</returns>
+    Result<TEntity> GetById(TId id);
+
+    #endregion Sync
+
+    #region Async
+
+    /// <summary>
     /// Asynchronously retrieves all entities from the repository.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all entities.</returns>
-    Task<Result<IEnumerable<TEntity>>> GetAll(CancellationToken cancellationToken = new());
+    Task<Result<IEnumerable<TEntity>>> GetAllAsync(CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously retrieves entities that match the specified filter expression.
@@ -35,7 +80,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching entities.</returns>
-    Task<Result<IEnumerable<TEntity>>> GetBy(
+    Task<Result<IEnumerable<TEntity>>> GetByAsync(
         Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
@@ -46,7 +91,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="projectionExpression">An expression to project the filtered entities to <typeparamref name="TProjected"/>.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of projected entities.</returns>
-    Task<Result<IEnumerable<TProjected>>> GetBy<TProjected>(
+    Task<Result<IEnumerable<TProjected>>> GetByAsync<TProjected>(
         Expression<Func<TEntity, bool>> filterExpression,
         Expression<Func<TEntity, TProjected>> projectionExpression, CancellationToken cancellationToken = new());
 
@@ -56,7 +101,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching entity.</returns>
-    Task<Result<TEntity>> First(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    Task<Result<TEntity>> FirstAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously retrieves an entity by its unique identifier.
@@ -64,11 +109,61 @@ public interface IRepository<TId, TEntity>
     /// <param name="id">The unique identifier of the entity to retrieve.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved entity.</returns>
-    Task<Result<TEntity>> GetById(TId id, CancellationToken cancellationToken = new());
+    Task<Result<TEntity>> GetByIdAsync(TId id, CancellationToken cancellationToken = new());
+
+    #endregion Async
 
     #endregion Search
 
     #region CUD
+
+    #region Sync
+
+    /// <summary>
+    /// Adds a new entity to the repository.
+    /// </summary>
+    /// <param name="entity">The entity to be added.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple Add(TEntity entity);
+
+    /// <summary>
+    /// Adds multiple new entities to the repository.
+    /// </summary>
+    /// <param name="entities">A collection of entities to be added.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple AddMany(ICollection<TEntity> entities);
+
+    /// <summary>
+    /// Updates an existing entity in the repository.
+    /// </summary>
+    /// <param name="entity">The entity to be updated.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple Update(TEntity entity);
+
+    /// <summary>
+    /// Removes entities from the repository based on a filter expression.
+    /// </summary>
+    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple Remove(Expression<Func<TEntity, bool>> filterExpression);
+
+    /// <summary>
+    /// Removes an entity from the repository by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the entity to be removed.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple RemoveById(TId id);
+
+    /// <summary>
+    /// Removes multiple entities from the repository based on a filter expression.
+    /// </summary>
+    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
+    ResultSimple RemoveMany(Expression<Func<TEntity, bool>> filterExpression);
+
+    #endregion Sync
+ 
+    #region Async
 
     /// <summary>
     /// Asynchronously adds a new entity to the repository.
@@ -76,7 +171,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="entity">The entity to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> Add(TEntity entity, CancellationToken cancellationToken = new());
+    Task<ResultSimple> AddAsync(TEntity entity, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously adds multiple new entities to the repository.
@@ -84,7 +179,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="entities">A collection of entities to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> AddMany(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
+    Task<ResultSimple> AddManyAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously updates an existing entity in the repository.
@@ -92,7 +187,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="entity">The entity to be updated.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> Update(TEntity entity, CancellationToken cancellationToken = new());
+    Task<ResultSimple> UpdateAsync(TEntity entity, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously removes entities from the repository based on a filter expression.
@@ -100,7 +195,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> Remove(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    Task<ResultSimple> RemoveAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously removes an entity from the repository by its unique identifier.
@@ -108,7 +203,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="id">The unique identifier of the entity to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> RemoveById(TId id, CancellationToken cancellationToken = new());
+    Task<ResultSimple> RemoveByIdAsync(TId id, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously removes multiple entities from the repository based on a filter expression.
@@ -116,7 +211,9 @@ public interface IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> RemoveMany(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    Task<ResultSimple> RemoveManyAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
+    #endregion Async
+ 
     #endregion CUD
 }

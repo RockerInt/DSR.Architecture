@@ -14,22 +14,20 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\"/>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.0" />
+    <PackageReference Include="Dsr.Architecture.Infrastructure.Persistence" Version="1.0.3" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.0" />
     <PackageReference Include="MongoDB.Bson" Version="2.25.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.25.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Dsr.Architecture.Infrastructure.Persistence\Dsr.Architecture.Infrastructure.Persistence.csproj" />
-    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
-    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
   </ItemGroup>
 
 </Project>

@@ -21,15 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.0" />
+    <PackageReference Include="Dsr.Architecture.Infrastructure.Persistence" Version="1.0.3" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Dsr.Architecture.Infrastructure.Persistence\Dsr.Architecture.Infrastructure.Persistence.csproj" />
-    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
-    <ProjectReference Include="..\Dsr.Architecture.Utilities\Dsr.Architecture.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
