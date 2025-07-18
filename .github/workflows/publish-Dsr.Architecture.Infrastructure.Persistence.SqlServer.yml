@@ -23,7 +23,7 @@ jobs:
         run: dotnet build src/Dsr.Architecture.Infrastructure.Persistence.SqlServer/Dsr.Architecture.Infrastructure.Persistence.SqlServer.csproj --configuration Release --no-restore
 
       - name: Pack
-        run: dotnet pack src/Dsr.Architecture.Infrastructure.Persistence.SqlServer/Dsr.Architecture.Infrastructure.Persistence.SqlServer.csproj --configuration Release --no-build -o nupkgs"
+        run: dotnet pack src/Dsr.Architecture.Infrastructure.Persistence.SqlServer/Dsr.Architecture.Infrastructure.Persistence.SqlServer.csproj --configuration Release --no-build -o nupkgs
 
       - name: Publish to NuGet
         run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
