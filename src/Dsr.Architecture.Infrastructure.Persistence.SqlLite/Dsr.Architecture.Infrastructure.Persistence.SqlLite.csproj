@@ -24,7 +24,7 @@
   <ItemGroup>
     <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.1" />
     <PackageReference Include="Dsr.Architecture.Infrastructure.Persistence" Version="1.0.4" />
-    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.0" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
