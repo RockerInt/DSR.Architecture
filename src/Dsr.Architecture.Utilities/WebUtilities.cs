@@ -12,14 +12,14 @@ namespace Dsr.Architecture.Utilities;
 /// </summary>
 public static class WebUtilities
 {
-    // Configuración de JSON para ignorar referencias circulares y formatear con indentación.
+    // JSON settings to ignore circular references and format with indentation.
     private static readonly JsonSerializerSettings _settings = new()
     {
         ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         Formatting = Formatting.Indented
     };
 
-    // Enumeración para definir los métodos HTTP.
+    // Enum to define HTTP methods.
     public enum Method
     {
         Get,
@@ -321,4 +321,5 @@ public static class WebUtilities
     public static Exception HttpCallError(this HttpResponseMessage response)
         => new($"StatusCode: {Convert.ToInt16(response.StatusCode)}, {Environment.NewLine} Message: {response.ValidateContent()}");
 }
+
 

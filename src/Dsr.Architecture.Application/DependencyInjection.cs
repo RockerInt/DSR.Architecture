@@ -1,24 +1,23 @@
 ﻿using Dsr.Architecture.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dsr.Architecture.Application;
 
+/// <summary>
+/// Static class for dependency injection of application services.
+/// </summary>
 public static class DependencyInjection
 {
     /// <summary>
-    /// Add to services for MediatR by Dependecy Injection
+    /// Adds application services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
-    public static IServiceCollection AddArchitectureApplication(this IServiceCollection services)
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         => services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(typeof(UseCaseBehavior<,>).Assembly);
             config.AddOpenBehavior(typeof(UseCaseBehavior<,>));
         });
 }
+

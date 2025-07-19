@@ -131,7 +131,7 @@ public interface IRepository<TId, TEntity>
     /// </summary>
     /// <param name="entities">A collection of entities to be added.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    ResultSimple AddMany(ICollection<TEntity> entities);
+    ResultSimple AddRange(ICollection<TEntity> entities);
 
     /// <summary>
     /// Updates an existing entity in the repository.
@@ -159,7 +159,7 @@ public interface IRepository<TId, TEntity>
     /// </summary>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    ResultSimple RemoveMany(Expression<Func<TEntity, bool>> filterExpression);
+    ResultSimple RemoveRange(Expression<Func<TEntity, bool>> filterExpression);
 
     #endregion Sync
  
@@ -179,7 +179,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="entities">A collection of entities to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> AddManyAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
+    Task<ResultSimple> AddRangeAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = new());
 
     /// <summary>
     /// Asynchronously updates an existing entity in the repository.
@@ -211,7 +211,7 @@ public interface IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    Task<ResultSimple> RemoveManyAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
+    Task<ResultSimple> RemoveRangeAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = new());
 
     #endregion Async
  
