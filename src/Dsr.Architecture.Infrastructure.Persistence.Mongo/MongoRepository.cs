@@ -150,7 +150,7 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// </summary>
     /// <param name="entities">A collection of documents to be added.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public ResultSimple AddMany(ICollection<TDocument> entities) => AddManyAsync(entities).GetAwaiter().GetResult();
+    public ResultSimple AddRange(ICollection<TDocument> entities) => AddRangeAsync(entities).GetAwaiter().GetResult();
 
     /// <summary>
     /// Updates an existing document in the collection.
@@ -178,7 +178,7 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// </summary>
     /// <param name="filterExpression">An expression to filter the documents to be removed.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public ResultSimple RemoveMany(Expression<Func<TDocument, bool>> filterExpression) => RemoveManyAsync(filterExpression).GetAwaiter().GetResult();
+    public ResultSimple RemoveRange(Expression<Func<TDocument, bool>> filterExpression) => RemoveRangeAsync(filterExpression).GetAwaiter().GetResult();
 
     #endregion
 
@@ -202,9 +202,9 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// <param name="documents">A collection of documents to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public virtual async Task<ResultSimple> AddManyAsync(ICollection<TDocument> documents, CancellationToken cancellationToken = new())
+    public virtual async Task<ResultSimple> AddRangeAsync(ICollection<TDocument> documents, CancellationToken cancellationToken = new())
     {
-        await _collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
+        await _collection.InsertRangeAsync(documents, cancellationToken: cancellationToken);
         return new ResultSimple();
     }
 
@@ -252,9 +252,9 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// <param name="filterExpression">An expression to filter the documents to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public virtual async Task<ResultSimple> RemoveManyAsync(Expression<Func<TDocument, bool>> filterExpression, CancellationToken cancellationToken = new())
+    public virtual async Task<ResultSimple> RemoveRangeAsync(Expression<Func<TDocument, bool>> filterExpression, CancellationToken cancellationToken = new())
     {
-        await _collection.DeleteManyAsync(filterExpression, cancellationToken: cancellationToken);
+        await _collection.DeleteRangeAsync(filterExpression, cancellationToken: cancellationToken);
         return new ResultSimple();
     }
 

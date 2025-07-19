@@ -161,7 +161,7 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// </summary>
     /// <param name="entities">A collection of entities to be added.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public ResultSimple AddMany(ICollection<TEntity> entities) => AddManyAsync(entities).GetAwaiter().GetResult();
+    public ResultSimple AddRange(ICollection<TEntity> entities) => AddRangeAsync(entities).GetAwaiter().GetResult();
 
     /// <summary>
     /// Updates an existing entity in the repository.
@@ -189,7 +189,7 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// </summary>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <returns>A <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public ResultSimple RemoveMany(Expression<Func<TEntity, bool>> filterExpression) => RemoveManyAsync(filterExpression).GetAwaiter().GetResult();
+    public ResultSimple RemoveRange(Expression<Func<TEntity, bool>> filterExpression) => RemoveRangeAsync(filterExpression).GetAwaiter().GetResult();
 
     #endregion
 
@@ -214,7 +214,7 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="entities">A collection of entities to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public async Task<ResultSimple> AddManyAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = default)
+    public async Task<ResultSimple> AddRangeAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddRangeAsync(entities, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -274,7 +274,7 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
-    public async Task<ResultSimple> RemoveManyAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
+    public async Task<ResultSimple> RemoveRangeAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
     {
         var entities = await _dbSet.Where(filterExpression).ToListAsync(cancellationToken);
         if (entities is not null && entities.Count != 0)
