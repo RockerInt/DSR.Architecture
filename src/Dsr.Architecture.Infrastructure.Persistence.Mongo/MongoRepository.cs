@@ -204,7 +204,7 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public virtual async Task<ResultSimple> AddRangeAsync(ICollection<TDocument> documents, CancellationToken cancellationToken = new())
     {
-        await _collection.InsertRangeAsync(documents, cancellationToken: cancellationToken);
+        await _collection.InsertManyAsync(documents, cancellationToken: cancellationToken);
         return new ResultSimple();
     }
 
@@ -254,7 +254,7 @@ public abstract class MongoRepository<TDocument> : IRepository<ObjectId, TDocume
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public virtual async Task<ResultSimple> RemoveRangeAsync(Expression<Func<TDocument, bool>> filterExpression, CancellationToken cancellationToken = new())
     {
-        await _collection.DeleteRangeAsync(filterExpression, cancellationToken: cancellationToken);
+        await _collection.DeleteManyAsync(filterExpression, cancellationToken: cancellationToken);
         return new ResultSimple();
     }
 
