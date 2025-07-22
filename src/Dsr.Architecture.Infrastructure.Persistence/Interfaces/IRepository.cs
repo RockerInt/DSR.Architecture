@@ -12,7 +12,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.Interfaces;
 /// <typeparam name="TEntity">The type of the entity managed by this repository.</typeparam>
 public interface IRepository<TId, TEntity>
     where TId : IEquatable<TId>, IComparable<TId>
-    where TEntity : Entity<TId>, IEntity<TId>
+    where TEntity : IEntity<TId>
 {
     #region Search
 
