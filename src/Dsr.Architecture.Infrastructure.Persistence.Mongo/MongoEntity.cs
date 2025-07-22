@@ -13,7 +13,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.Mongo;
 /// </remarks>
 /// <param name="id">The ObjectId of the entity. If null, a new ObjectId is generated.</param>
 public abstract class MongoEntity(ObjectId? id = null)
-    : Entity<ObjectId>(id ?? GetNewId()), IEntity<ObjectId>
+    : Entity<ObjectId>(id ?? GetNewId()), IMongoEntity, IEntity<ObjectId>
 {
     /// <summary>
     /// Gets or sets the ObjectId of the entity.

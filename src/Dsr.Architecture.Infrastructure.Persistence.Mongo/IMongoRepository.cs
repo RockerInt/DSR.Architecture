@@ -10,6 +10,6 @@ namespace Dsr.Architecture.Infrastructure.Persistence.Mongo;
 /// </summary>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 public interface IMongoRepository<TEntity> : IRepository<ObjectId, TEntity>
-    where TEntity : MongoEntity
+    where TEntity : IMongoEntity
 {
 }
