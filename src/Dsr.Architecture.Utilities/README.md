@@ -1,5 +1,7 @@
 # DSR.Architecture.Utilities
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Utilities?style=flat-square)
+
 This project provides a collection of utility classes and extension methods for the DSR.Architecture solution. It includes helpers for web-related tasks, such as making HTTP requests and handling JSON serialization, as well as other general-purpose utilities.
 
 ## Features

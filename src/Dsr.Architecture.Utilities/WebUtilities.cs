@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Dsr.Architecture.Utilities.Enums;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Globalization;
@@ -12,22 +13,6 @@ namespace Dsr.Architecture.Utilities;
 /// </summary>
 public static class WebUtilities
 {
-    // JSON settings to ignore circular references and format with indentation.
-    private static readonly JsonSerializerSettings _settings = new()
-    {
-        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        Formatting = Formatting.Indented
-    };
-
-    // Enum to define HTTP methods.
-    public enum Method
-    {
-        Get,
-        Post,
-        Put,
-        Delete
-    }
-
     /// <summary>
     /// Asynchronously sends an HTTP request with the specified method, base address, path, and data.
     /// </summary>
@@ -144,152 +129,6 @@ public static class WebUtilities
         return resp;
     }
 
-    /// <summary>
-    /// Serializes an object to JSON using the specified settings.
-    /// </summary>
-    /// <param name="obj">Object to serialize.</param>
-    /// <param name="settings">Optional JSON serialization settings.</param>
-    /// <returns>Serialized JSON string.</returns>
-    public static string JsonSerialize(this object obj, JsonSerializerSettings? settings = null)
-        => JsonConvert.SerializeObject(obj, settings ?? _settings);
-
-    /// <summary>
-    /// Deserializes a JSON string to an entity of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <param name="obj">JSON string to deserialize.</param>
-    /// <returns>Deserialized entity.</returns>
-    public static T ToEntity<T>(this string obj) where T : class, new()
-    {
-        T? returnObj = ToEntitySimple<T>(obj);
-
-        if (returnObj != null) return returnObj;
-
-        returnObj = new();
-        PropertyInfo[] piProperties = typeof(T).GetProperties();
-        JObject jObj = JObject.Parse(obj);
-
-        foreach (PropertyInfo piProperty in piProperties)
-        {
-            try
-            {
-                string? stringValue = (string?)jObj.SelectToken(piProperty.Name);
-                if (stringValue != null)
-                {
-                    TypeConverter tc = TypeDescriptor.GetConverter(piProperty.PropertyType);
-                    piProperty.SetValue(returnObj, tc.ConvertFromString(null, CultureInfo.InvariantCulture, stringValue));
-                }
-            }
-            catch { }
-        }
-
-        return returnObj;
-    }
-
-    /// <summary>
-    /// Deserializes a JSON string to a simple entity of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <param name="obj">JSON string to deserialize.</param>
-    /// <returns>Deserialized entity.</returns>
-    public static T? ToEntitySimple<T>(this string? obj)
-        => obj != null ? JsonConvert.DeserializeObject<T>(obj) : default;
-
-    /// <summary>
-    /// Deserializes a JSON string to a list of entities of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <typeparam name="D">Type of the sub-entity for nested lists.</typeparam>
-    /// <param name="objs">JSON string to deserialize.</param>
-    /// <returns>List of deserialized entities.</returns>
-    public static List<T> ToEntityList<T, D>(this string objs) where T : class, new() where D : class, new()
-    {
-        PropertyInfo[] piProperties = typeof(T).GetProperties();
-        List<T> returnObjList = new();
-        var jArray = JsonConvert.DeserializeObject<dynamic[]>(objs);
-
-        if (jArray != null)
-        {
-            foreach (var obj in jArray)
-            {
-                if (obj != null)
-                {
-                    JObject jObj = JObject.Parse(obj.ToString());
-                    T preReturnObj = new();
-                    foreach (PropertyInfo piProperty in piProperties)
-                    {
-                        if (!typeof(System.Collections.IList).IsAssignableFrom(piProperty.PropertyType))
-                        {
-                            string? stringValue = (string?)jObj.SelectToken(piProperty.Name);
-                            if (stringValue != null)
-                            {
-                                TypeConverter tc = TypeDescriptor.GetConverter(piProperty.PropertyType);
-                                piProperty.SetValue(preReturnObj, tc.ConvertFromString(null, CultureInfo.InvariantCulture, stringValue));
-                            }
-                        }
-                        else if (!typeof(T).Equals(typeof(D)))
-                        {
-                            if (!string.IsNullOrWhiteSpace(jObj.SelectToken(piProperty.Name)?.ToString()))
-                            {
-                                JArray jArraySub = JArray.Parse(jObj.SelectToken(piProperty.Name)?.ToString() ?? string.Empty);
-                                List<D> asingObjSub = ToEntityList<D, D>(jArraySub.ToString());
-                                piProperty.SetValue(preReturnObj, asingObjSub);
-                            }
-                        }
-                    }
-                    returnObjList.Add(preReturnObj);
-                }
-            }
-        }
-        return returnObjList;
-    }
-
-    /// <summary>
-    /// Deserializes a JSON string to a list of simple entities of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <param name="objs">JSON string to deserialize.</param>
-    /// <returns>List of deserialized entities.</returns>
-    public static List<T>? ToEntityListSimple<T>(this string? objs)
-        => objs != null ? JsonConvert.DeserializeObject<List<T>>(objs) : null;
-
-    /// <summary>
-    /// Deserializes a JSON string to a dictionary.
-    /// </summary>
-    /// <typeparam name="T">Type of the key.</typeparam>
-    /// <typeparam name="D">Type of the value.</typeparam>
-    /// <param name="objs">JSON string to deserialize.</param>
-    /// <returns>Deserialized dictionary.</returns>
-    public static Dictionary<T, D>? ToDictionary<T, D>(this string objs) where T : struct
-        => JsonConvert.DeserializeObject<Dictionary<T, D>>(objs);
-
-    /// <summary>
-    /// Tries to parse a JSON string to an object of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the object.</typeparam>
-    /// <param name="json">JSON string to parse.</param>
-    /// <param name="result">Parsed object, if successful.</param>
-    /// <returns>True if parsing was successful, otherwise false.</returns>
-    public static bool TryParseJson<T>(this string json, out T? result)
-    {
-        bool success = true;
-
-        if (string.IsNullOrEmpty(json))
-        {
-            success = false;
-            result = default;
-            return success;
-        }
-
-        var settings = new JsonSerializerSettings
-        {
-            Error = (sender, args) => { success = false; args.ErrorContext.Handled = true; },
-            MissingMemberHandling = MissingMemberHandling.Error
-        };
-
-        result = JsonConvert.DeserializeObject<T>(json, settings);
-        return success;
-    }
 
     /// <summary>
     /// Maps an HTTP response to an entity of type T.
@@ -320,6 +159,7 @@ public static class WebUtilities
     /// <returns>Generated exception.</returns>
     public static Exception HttpCallError(this HttpResponseMessage response)
         => new($"StatusCode: {Convert.ToInt16(response.StatusCode)}, {Environment.NewLine} Message: {response.ValidateContent()}");
+
 }
 
 
