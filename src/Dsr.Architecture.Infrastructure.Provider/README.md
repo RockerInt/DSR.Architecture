@@ -1,5 +1,7 @@
 # DSR.Architecture.Infrastructure.Provider
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Provider?style=flat-square)
+
 This project provides a client for making RESTful API calls within the DSR.Architecture solution. It abstracts the complexities of HTTP communication, offering a simple and consistent way to interact with external services.
 
 ## Features

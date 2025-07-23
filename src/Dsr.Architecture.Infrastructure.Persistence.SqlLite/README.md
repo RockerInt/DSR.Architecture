@@ -1,5 +1,7 @@
 # DSR.Architecture.Infrastructure.Persistence.SqlLite
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.SqlLite?style=flat-square)
+
 This project provides a SQLite-based implementation of the persistence layer for the DSR.Architecture solution. It includes repository implementations and data access patterns specifically designed for SQLite, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
 
 ## Features

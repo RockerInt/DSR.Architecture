@@ -1,5 +1,7 @@
 # DSR.Architecture.TryCatch
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.TryCatch?style=flat-square&label=Nuget%20TryCatch)
+
 This project provides a fluent and expressive way to handle exceptions in C#. It offers a `TryCatch` utility that allows for chaining `Try`, `Catch`, and `Finally` blocks in a declarative style, improving code readability and maintainability.
 
 ## Features

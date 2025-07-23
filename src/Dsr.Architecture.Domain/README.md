@@ -1,5 +1,7 @@
 # DSR.Architecture.Domain
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Domain?style=flat-square)
+
 Core domain library for the DSR.Architecture solution. This project contains the essential building blocks for domain-driven design, including entities, value objects, domain events, and business logic abstractions. It is designed to be modular and scalable, serving as the foundation for enterprise applications built with DSR.Architecture.
 
 ## Features

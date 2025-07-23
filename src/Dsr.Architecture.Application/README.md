@@ -1,5 +1,7 @@
 # DSR.Architecture.Application
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Application?style=flat-square)
+
 This project contains the Application layer for the DSR.Architecture solution. It is responsible for implementing use cases, application services, validation, and orchestration of domain logic. The Application layer acts as a bridge between the domain model and external interfaces, coordinating business processes in a modular and scalable enterprise architecture.
 
 ## Features

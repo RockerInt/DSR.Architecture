@@ -1,5 +1,7 @@
 # DSR.Architecture.Infrastructure.Persistence.SqlServer
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.SqlServer?style=flat-square)
+
 This project provides a SQL Server-based implementation of the persistence layer for the DSR.Architecture solution. It includes repository implementations and data access patterns specifically designed for SQL Server, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
 
 ## Features
