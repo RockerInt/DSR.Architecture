@@ -2,6 +2,17 @@
 
 DSR.Architecture is a robust and modular .NET solution designed to facilitate the development of scalable, maintainable, and testable enterprise applications. It promotes a clean architecture approach, separating concerns into distinct layers: Domain, Application, and Infrastructure.
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Domain?style=flat-square&label=Nuget%20Domain)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Application?style=flat-square&label=Nuget%20Application)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence?style=flat-square&label=Nuget%20Infrastructure.Persistence)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.Mongo?style=flat-square&label=Nuget%20Infrastructure.Persistence.Mongo)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.SqlLite?style=flat-square&label=Nuget%20Infrastructure.Persistence.SqlLite)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.SqlServer?style=flat-square&label=Nuget%20Infrastructure.Persistence.SqlServer)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Provider?style=flat-square&label=Nuget%20Infrastructure.Provider)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.TryCatch?style=flat-square&label=Nuget%20TryCatch)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Utilities?style=flat-square&label=Nuget%20Utilities)
+
+
 ## Purpose
 
 The primary goal of DSR.Architecture is to provide a solid foundation for building complex business applications by enforcing best practices in software design, such as:
