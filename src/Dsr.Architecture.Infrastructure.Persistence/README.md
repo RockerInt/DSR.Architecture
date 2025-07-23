@@ -1,5 +1,7 @@
 # DSR.Architecture.Infrastructure.Persistence
 
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence?style=flat-square)
+
 Infrastructure persistence library for the DSR.Architecture solution. This project provides generic repository interfaces and implementations for data access, supporting multiple storage providers and patterns. It enables modular, scalable, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
 
 ## Features
