@@ -57,6 +57,14 @@ public static class Utilities
         };
 
     /// <summary>
+    /// Determines whether a type is a native .NET type.
+    /// </summary>
+    /// <typeparam name="T">The type to check.</typeparam>
+    /// <returns>True if the type is native; otherwise, false.</returns>
+    public static bool IsNative<T>(this T obj)
+        => IsNative(typeof(T));
+
+    /// <summary>
     /// Determines whether a property is of a native .NET type and is writable.
     /// </summary>
     /// <param name="property">The property to check.</param>
@@ -509,9 +517,63 @@ public static class Utilities
     public static void Each<T>(this T[] items, Action<T> action)
     {
         foreach (var item in items)
-        {
             action(item);
-        }
+    }
+
+    /// <summary>
+    /// Executes an action for each item in an enumerable.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">The enumerable of items.</param>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public static async Task EachAsync<T>(this IEnumerable<T> items, Action<T> action, CancellationToken cancellationToken)
+    {
+        foreach (var item in items)
+            await Task.Run(() => action(item), cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes an action for each item in an array.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">The array of items.</param>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public static async Task EachAsync<T>(this T[] items, Action<T> action, CancellationToken cancellationToken)
+    {
+        foreach (var item in items)
+            await Task.Run(() => action(item), cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes an action for each item in an enumerable.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">The enumerable of items.</param>
+    /// <param name="func">The asynchronous function to execute.</param>
+    /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public static async Task EachAsync<T>(this IEnumerable<T> items, Func<T, CancellationToken, Task<T>> func, CancellationToken cancellationToken)
+    {
+        foreach (var item in items)
+            await func(item, cancellationToken);
+    }
+
+    /// <summary>
+    /// Executes an action for each item in an array.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">The array of items.</param>
+    /// <param name="func">The function to execute.</param>
+    /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public static async Task EachAsync<T>(this T[] items, Func<T, CancellationToken, Task<T>> func, CancellationToken cancellationToken)
+    {
+        foreach (var item in items)
+            await func(item, cancellationToken);
     }
 
     /// <summary>
