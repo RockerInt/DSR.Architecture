@@ -14,7 +14,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,8 +23,8 @@
 
   <ItemGroup>
     <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.1" />
-    <PackageReference Include="Dsr.Architecture.Infrastructure.Persistence" Version="1.0.6" />
-    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.2" />
+    <PackageReference Include="Dsr.Architecture.Infrastructure.Persistence" Version="1.0.7" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
