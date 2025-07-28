@@ -3,6 +3,7 @@ using Dsr.Architecture.Domain.Interfaces;
 using Dsr.Architecture.Infrastructure.Persistence.Interfaces;
 using Dsr.Architecture.Utilities.TryCatch;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
@@ -83,7 +84,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
     public async Task<Result<IEnumerable<TEntity>>> GetAllAsync(CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.ToListAsync(cancellationToken)))
             .Catch(async (error) => { 
-                _logger.Error(error, "An error occurred while retrieving all entities."); 
+                _logger.LogError(error, "An error occurred while retrieving all entities."); 
                 return await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)); 
             })
             .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving all entities.");
@@ -97,8 +98,8 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
     public async Task<Result<IEnumerable<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.Where(filterExpression).ToListAsync(cancellationToken)))
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while retrieving entities by filter expression.");
-                return await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message))
+                _logger.LogError(error, "An error occurred while retrieving entities by filter expression.");
+                return await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message));
             }) 
             .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving entities by filter expression.");
 
@@ -114,8 +115,8 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
         => await this.Try(async () => new Result<IEnumerable<TProjected>>(
             await _dbSet.Where(filterExpression).Select(projectionExpression).ToListAsync(cancellationToken)))
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while retrieving and projecting entities by filter expression."); 
-                return await Task.FromResult(new Result<IEnumerable<TProjected>>(null, 1, error.Message))
+                _logger.LogError(error, "An error occurred while retrieving and projecting entities by filter expression."); 
+                return await Task.FromResult(new Result<IEnumerable<TProjected>>(null, 1, error.Message));
             })
             .Apply() ?? new Result<IEnumerable<TProjected>>(null, 1, "An error occurred while retrieving and projecting entities by filter expression.");
 
@@ -128,7 +129,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
     public async Task<Result<TEntity>> FirstAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<TEntity>(await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken)))
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while retrieving the first entity by filter expression.");
+                _logger.LogError(error, "An error occurred while retrieving the first entity by filter expression.");
                 return await Task.FromResult(new Result<TEntity>(null, 1, error.Message));
             })
             .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the first entity by filter expression.");
@@ -142,7 +143,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
     public async Task<Result<TEntity>> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<TEntity>(await _dbSet.FindAsync([id], cancellationToken)))
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while retrieving the entity by ID.");
+                _logger.LogError(error, "An error occurred while retrieving the entity by ID.");
                 return await Task.FromResult(new Result<TEntity>(null, 1, error.Message));
             })
             .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the entity by ID.");
@@ -215,7 +216,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                     return new ResultSimple();
                 })
                 .Catch(async (error) => {
-                    _logger.Error(error, "An error occurred while adding the entity.");
+                    _logger.LogError(error, "An error occurred while adding the entity.");
                     return await Task.FromResult(new ResultSimple(1, error.Message));
                 })
                 .Apply() ?? new ResultSimple(1, "An error occurred while adding the entity.");
@@ -234,7 +235,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                 return new ResultSimple();
             })
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while adding the entities.");
+                _logger.LogError(error, "An error occurred while adding the entities.");
                 return await Task.FromResult(new ResultSimple(1, error.Message));
             })
             .Apply() ?? new ResultSimple(1, "An error occurred while adding the entities.");
@@ -258,7 +259,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                 return new ResultSimple();
             })
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while updating the entity.");
+                _logger.LogError(error, "An error occurred while updating the entity.");
                 return await Task.FromResult(new ResultSimple(1, error.Message));
             })
             .Apply() ?? new ResultSimple(1, "An error occurred while updating the entity.");
@@ -281,7 +282,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                 return new ResultSimple();
             })
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while removing the entity by filter expression.");
+                _logger.LogError(error, "An error occurred while removing the entity by filter expression.");
                 return await Task.FromResult(new ResultSimple(1, error.Message));
             })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by filter expression.");
@@ -304,7 +305,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                 return new ResultSimple();
             })
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while removing the entity by ID.");
+                _logger.LogError(error, "An error occurred while removing the entity by ID.");
                 return await Task.FromResult(new ResultSimple(1, error.Message));
             })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by ID.");
@@ -327,7 +328,7 @@ public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context,
                 return new ResultSimple();
             })
             .Catch(async (error) => {
-                _logger.Error(error, "An error occurred while removing entities by filter expression.");
+                _logger.LogError(error, "An error occurred while removing entities by filter expression.");
                 return await Task.FromResult(new ResultSimple(1, error.Message));
             })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing entities by filter expression.");
