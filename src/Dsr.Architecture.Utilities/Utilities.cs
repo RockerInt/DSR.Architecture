@@ -556,7 +556,7 @@ public static class Utilities
     /// <param name="func">The asynchronous function to execute.</param>
     /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task EachAsync<T>(this IEnumerable<T> items, Func<T, CancellationToken, Task<T>> func, CancellationToken cancellationToken)
+    public static async Task EachAsync<T>(this IEnumerable<T> items, Func<T, CancellationToken, Task> func, CancellationToken cancellationToken)
     {
         foreach (var item in items)
             await func(item, cancellationToken);
@@ -570,7 +570,7 @@ public static class Utilities
     /// <param name="func">The function to execute.</param>
     /// <param name="cancellationToken">The cancellation token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task EachAsync<T>(this T[] items, Func<T, CancellationToken, Task<T>> func, CancellationToken cancellationToken)
+    public static async Task EachAsync<T>(this T[] items, Func<T, CancellationToken, Task> func, CancellationToken cancellationToken)
     {
         foreach (var item in items)
             await func(item, cancellationToken);
