@@ -25,6 +25,8 @@ jobs:
               - 'src/Dsr.Architecture.Domain/**'
             Dsr.Architecture.Infrastructure.Persistence:
               - 'src/Dsr.Architecture.Infrastructure.Persistence/**'
+            Dsr.Architecture.Infrastructure.Persistence.EntityFramework:
+              - 'src/Dsr.Architecture.Infrastructure.Persistence.EntityFramework/**'
             Dsr.Architecture.Infrastructure.Persistence.Mongo:
               - 'src/Dsr.Architecture.Infrastructure.Persistence.Mongo/**'
             Dsr.Architecture.Infrastructure.Persistence.SqlLite:
