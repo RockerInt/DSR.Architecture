@@ -1,25 +1,25 @@
-# DSR.Architecture.Infrastructure.Persistence.SqlLite
+# Dsr.Architecture.Infrastructure.Persistence.EntityFramework
 
-![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.SqlLite?style=flat-square)
+![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence.EntityFramework?style=flat-square)
 
-This project provides a SQLite-based implementation of the persistence layer for the DSR.Architecture solution. It includes repository implementations and data access patterns specifically designed for SQLite, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
+This project provides a EFCore-based implementation of the persistence layer for the DSR.Architecture solution. It includes repository implementations and data access patterns specifically designed for EFCore like SQLite, SQL Server, Oracle, etc.; enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
 
 ## Features
 
-- **SQLite Repository Pattern**: Implements generic repositories for CRUD operations and querying entities in SQLite.
+- **EFCore Repository Pattern**: Implements generic repositories for CRUD operations and querying entities in EFCore.
 - **Integration with Domain Layer**: Works seamlessly with domain entities and value objects from the DSR.Architecture.Domain project.
 - **Configuration and Dependency Injection**: Uses Microsoft.Extensions for configuration and dependency injection.
 
 ## Usage
 
-Reference this package in your infrastructure projects to implement data access and persistence logic using SQLite for DSR.Architecture-based solutions.
+Reference this package in your infrastructure projects to implement data access and persistence logic using EFCore for DSR.Architecture-based solutions.
 
 ## Installation
 
 Once published, install via NuGet:
 
 ```bash
-dotnet add package DSR.Architecture.Infrastructure.Persistence.SqlLite
+dotnet add package DSR.Architecture.Infrastructure.Persistence.EntityFramework
 ```
 
 ## Dependencies

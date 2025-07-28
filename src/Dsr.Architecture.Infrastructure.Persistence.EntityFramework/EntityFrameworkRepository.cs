@@ -5,23 +5,24 @@ using Dsr.Architecture.Utilities.TryCatch;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace Dsr.Architecture.Infrastructure.Persistence.SqlLite;
+namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 
 /// <summary>
-/// Represents a repository for managing entities in a SQLite database.
+/// Represents a repository for managing entities in a EntityFramework implementation for databases.
 /// </summary>
 /// <typeparam name="TId">The type of the unique identifier for the entity.</typeparam>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
 /// <remarks>
-/// Initializes a new instance of the <see cref="SqlLiteRepository{TId, TEntity}"/> class.
+/// Initializes a new instance of the <see cref="EntityFrameworkRepository{TId, TEntity}"/> class.
 /// </remarks>
 /// <param name="context">The <see cref="DbContext"/> to be used by the repository.</param>
-public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepository<TId, TEntity>
+public abstract class EntityFrameworkRepository<TId, TEntity>(DbContext context, ILogger<EntityFrameworkRepository<TId, TEntity>> logger) : IRepository<TId, TEntity>
     where TId : IEquatable<TId>, IComparable<TId>
     where TEntity : Entity<TId>, IEntity<TId>
 {
     private readonly DbContext _context = context;
     private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
+    private readonly ILogger<EntityFrameworkRepository<TId, TEntity>> _logger = logger;
 
     #region Search
 
@@ -81,7 +82,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all entities.</returns>
     public async Task<Result<IEnumerable<TEntity>>> GetAllAsync(CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.ToListAsync(cancellationToken)))
-            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)))
+            .Catch(async (error) => { 
+                _logger.Error(error, "An error occurred while retrieving all entities."); 
+                return await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)); 
+            })
             .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving all entities.");
 
     /// <summary>
@@ -92,7 +96,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching entities.</returns>
     public async Task<Result<IEnumerable<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.Where(filterExpression).ToListAsync(cancellationToken)))
-            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while retrieving entities by filter expression.");
+                return await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message))
+            }) 
             .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving entities by filter expression.");
 
     /// <summary>
@@ -106,7 +113,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
     public async Task<Result<IEnumerable<TProjected>>> GetByAsync<TProjected>(Expression<Func<TEntity, bool>> filterExpression, Expression<Func<TEntity, TProjected>> projectionExpression, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<IEnumerable<TProjected>>(
             await _dbSet.Where(filterExpression).Select(projectionExpression).ToListAsync(cancellationToken)))
-            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TProjected>>(null, 1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while retrieving and projecting entities by filter expression."); 
+                return await Task.FromResult(new Result<IEnumerable<TProjected>>(null, 1, error.Message))
+            })
             .Apply() ?? new Result<IEnumerable<TProjected>>(null, 1, "An error occurred while retrieving and projecting entities by filter expression.");
 
     /// <summary>
@@ -117,7 +127,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching entity.</returns>
     public async Task<Result<TEntity>> FirstAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<TEntity>(await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken)))
-            .Catch(async (error) => await Task.FromResult(new Result<TEntity>(null, 1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while retrieving the first entity by filter expression.");
+                return await Task.FromResult(new Result<TEntity>(null, 1, error.Message));
+            })
             .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the first entity by filter expression.");
 
     /// <summary>
@@ -128,7 +141,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved entity.</returns>
     public async Task<Result<TEntity>> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
         => await this.Try(async () => new Result<TEntity>(await _dbSet.FindAsync([id], cancellationToken)))
-            .Catch(async (error) => await Task.FromResult(new Result<TEntity>(null, 1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while retrieving the entity by ID.");
+                return await Task.FromResult(new Result<TEntity>(null, 1, error.Message));
+            })
             .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the entity by ID.");
 
     #endregion
@@ -198,7 +214,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
                     await _dbSet.AddAsync(entity, cancellationToken);
                     return new ResultSimple();
                 })
-                .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+                .Catch(async (error) => {
+                    _logger.Error(error, "An error occurred while adding the entity.");
+                    return await Task.FromResult(new ResultSimple(1, error.Message));
+                })
                 .Apply() ?? new ResultSimple(1, "An error occurred while adding the entity.");
 
     /// <summary>
@@ -214,7 +233,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
                 await _dbSet.AddRangeAsync(entities, cancellationToken);
                 return new ResultSimple();
             })
-            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while adding the entities.");
+                return await Task.FromResult(new ResultSimple(1, error.Message));
+            })
             .Apply() ?? new ResultSimple(1, "An error occurred while adding the entities.");
 
     /// <summary>
@@ -235,7 +257,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
                 _context.Entry(entity).State = EntityState.Modified;
                 return new ResultSimple();
             })
-            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while updating the entity.");
+                return await Task.FromResult(new ResultSimple(1, error.Message));
+            })
             .Apply() ?? new ResultSimple(1, "An error occurred while updating the entity.");
 
     /// <summary>
@@ -255,7 +280,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
                     
                 return new ResultSimple();
             })
-            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while removing the entity by filter expression.");
+                return await Task.FromResult(new ResultSimple(1, error.Message));
+            })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by filter expression.");
 
     /// <summary>
@@ -275,7 +303,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
                     
                 return new ResultSimple();
             })
-            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while removing the entity by ID.");
+                return await Task.FromResult(new ResultSimple(1, error.Message));
+            })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by ID.");
 
     /// <summary>
@@ -295,7 +326,10 @@ public abstract class SqlLiteRepository<TId, TEntity>(DbContext context) : IRepo
 
                 return new ResultSimple();
             })
-            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Catch(async (error) => {
+                _logger.Error(error, "An error occurred while removing entities by filter expression.");
+                return await Task.FromResult(new ResultSimple(1, error.Message));
+            })
             .Apply() ?? new ResultSimple(1, "An error occurred while removing entities by filter expression.");
 
     #endregion

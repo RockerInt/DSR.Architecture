@@ -7,14 +7,14 @@
     <Authors>Jonathan Jimenez</Authors>
     <Company>Jonathan Jimenez</Company>
     <Description>
-      SQLite persistence library for DSR.Architecture. Provides repository implementations and data access patterns for SQLite, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
+      EFCore persistence library for DSR.Architecture. Provides repository implementations and data access patterns for EFCore, enabling scalable, modular, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
     </Description>
-    <PackageTags>infrastructure;persistence;sqlite;repository;data-access;storage;architecture;modular;enterprise;dsr-architecture</PackageTags>
+    <PackageTags>infrastructure;persistence;entity-framework;efcore;repository;data-access;storage;architecture;modular;enterprise;dsr-architecture</PackageTags>
     <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.6</Version>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

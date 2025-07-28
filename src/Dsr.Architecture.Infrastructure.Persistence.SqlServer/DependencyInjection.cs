@@ -17,14 +17,5 @@ public static class DependencyInjection
     /// <param name="configuration">The application configuration.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     public static IServiceCollection AddPersistenceServices(this IServiceCollection services, IConfiguration configuration)
-    {
-        var persistenceSettings = services.BuildServiceProvider().GetRequiredService<IPersistenceSettings>();
-
-        services.AddDbContext<SqlServerDbContext>(options =>
-            options.UseSqlServer(persistenceSettings.ConnectionString));
-
-        services.AddScoped(typeof(IRepository<,>), typeof(SqlServerRepository<,>));
-
-        return services;
-    }
+        => services.AddScoped(typeof(IRepository<,>), typeof(SqlServerRepository<,>));
 }

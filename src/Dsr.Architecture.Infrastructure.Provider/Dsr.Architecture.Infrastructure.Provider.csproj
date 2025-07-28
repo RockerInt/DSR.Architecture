@@ -23,8 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.1" />
-    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.4" />
   </ItemGroup>
 
 </Project>

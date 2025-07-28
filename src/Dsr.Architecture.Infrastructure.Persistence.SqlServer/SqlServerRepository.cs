@@ -7,27 +7,20 @@ using System.Linq.Expressions;
 namespace Dsr.Architecture.Infrastructure.Persistence.SqlServer;
 
 /// <summary>
-/// Generic repository for SQL Server using Entity Framework Core.
+/// Represents a repository for managing entities in a SQL Server database.
 /// </summary>
-/// <typeparam name="TId">The type of the entity's identifier.</typeparam>
+/// <typeparam name="TId">The type of the unique identifier for the entity.</typeparam>
 /// <typeparam name="TEntity">The type of the entity.</typeparam>
-public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SqlServerRepository{TId, TEntity}"/> class.
+/// </remarks>
+/// <param name="context">The <see cref="DbContext"/> to be used by the repository.</param>
+public abstract class SqlServerRepository<TId, TEntity>(DbContext context) : IRepository<TId, TEntity>
     where TId : IEquatable<TId>, IComparable<TId>
     where TEntity : Entity<TId>, IEntity<TId>
 {
-    private readonly SqlServerDbContext _context;
-    private readonly DbSet<TEntity> _dbSet;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SqlServerRepository{TId, TEntity}"/> class.
-    /// </summary>
-    /// <param name="context">The database context.</param>
-    public SqlServerRepository(SqlServerDbContext context)
-    {
-        _context = context;
-        _dbSet = _context.Set<TEntity>();
-    }
-
+    private readonly DbContext _context = context;
+    private readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
     #region Search
 
@@ -86,10 +79,9 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all entities.</returns>
     public async Task<Result<IEnumerable<TEntity>>> GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        var result = await _dbSet.ToListAsync(cancellationToken);
-        return new Result<IEnumerable<TEntity>>(result);
-    }
+        => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.ToListAsync(cancellationToken)))
+            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)))
+            .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving all entities.");
 
     /// <summary>
     /// Asynchronously retrieves entities that match the specified filter expression.
@@ -98,10 +90,9 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching entities.</returns>
     public async Task<Result<IEnumerable<TEntity>>> GetByAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
-    {
-        var result = await _dbSet.Where(filterExpression).ToListAsync(cancellationToken);
-        return new Result<IEnumerable<TEntity>>(result);
-    }
+        => await this.Try(async () => new Result<IEnumerable<TEntity>>(await _dbSet.Where(filterExpression).ToListAsync(cancellationToken)))
+            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TEntity>>(null, 1, error.Message)))
+            .Apply() ?? new Result<IEnumerable<TEntity>>(null, 1, "An error occurred while retrieving entities by filter expression.");
 
     /// <summary>
     /// Asynchronously retrieves and projects entities that match the specified filter expression to a different type.
@@ -112,10 +103,10 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of projected entities.</returns>
     public async Task<Result<IEnumerable<TProjected>>> GetByAsync<TProjected>(Expression<Func<TEntity, bool>> filterExpression, Expression<Func<TEntity, TProjected>> projectionExpression, CancellationToken cancellationToken = default)
-    {
-        var result = await _dbSet.Where(filterExpression).Select(projectionExpression).ToListAsync(cancellationToken);
-        return new Result<IEnumerable<TProjected>>(result);
-    }
+        => await this.Try(async () => new Result<IEnumerable<TProjected>>(
+            await _dbSet.Where(filterExpression).Select(projectionExpression).ToListAsync(cancellationToken)))
+            .Catch(async (error) => await Task.FromResult(new Result<IEnumerable<TProjected>>(null, 1, error.Message)))
+            .Apply() ?? new Result<IEnumerable<TProjected>>(null, 1, "An error occurred while retrieving and projecting entities by filter expression.");
 
     /// <summary>
     /// Asynchronously finds the first entity that matches the given filter expression.
@@ -124,10 +115,9 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching entity.</returns>
     public async Task<Result<TEntity>> FirstAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
-    {
-        var result = await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken);
-        return new Result<TEntity>(result);
-    }
+        => await this.Try(async () => new Result<TEntity>(await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken)))
+            .Catch(async (error) => await Task.FromResult(new Result<TEntity>(null, 1, error.Message)))
+            .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the first entity by filter expression.");
 
     /// <summary>
     /// Asynchronously retrieves an entity by its unique identifier.
@@ -136,10 +126,9 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved entity.</returns>
     public async Task<Result<TEntity>> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
-    {
-        var result = await _dbSet.FindAsync([id], cancellationToken);
-        return new Result<TEntity>(result);
-    }
+        => await this.Try(async () => new Result<TEntity>(await _dbSet.FindAsync([id], cancellationToken)))
+            .Catch(async (error) => await Task.FromResult(new Result<TEntity>(null, 1, error.Message)))
+            .Apply() ?? new Result<TEntity>(null, 1, "An error occurred while retrieving the entity by ID.");
 
     #endregion
 
@@ -202,11 +191,14 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
-    {
-        await _dbSet.AddAsync(entity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                    if (entity is null)
+                        return new ResultSimple(1, "Entity cannot be null.");
+                    await _dbSet.AddAsync(entity, cancellationToken);
+                    return new ResultSimple();
+                })
+                .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+                .Apply() ?? new ResultSimple(1, "An error occurred while adding the entity.");
 
     /// <summary>
     /// Asynchronously adds multiple new entities to the repository.
@@ -215,11 +207,14 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> AddRangeAsync(ICollection<TEntity> entities, CancellationToken cancellationToken = default)
-    {
-        await _dbSet.AddRangeAsync(entities, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                if (entities is null || entities.Count == 0)
+                    return new ResultSimple(1, "Entities collection cannot be null or empty.");
+                await _dbSet.AddRangeAsync(entities, cancellationToken);
+                return new ResultSimple();
+            })
+            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Apply() ?? new ResultSimple(1, "An error occurred while adding the entities.");
 
     /// <summary>
     /// Asynchronously updates an existing entity in the repository.
@@ -228,11 +223,19 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-    {
-        _context.Entry(entity).State = EntityState.Modified;
-        await _context.SaveChangesAsync(cancellationToken);
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                if (entity is null)
+                    return new ResultSimple(1, "Entity cannot be null.");
+                if (entity.Id is null)
+                    return new ResultSimple(1, "Entity ID cannot be null.");
+                if (!await _dbSet.AnyAsync(e => e.Id!.Equals(entity.Id), cancellationToken))
+                    return new ResultSimple(1, "Entity not found in the database.");
+
+                _context.Entry(entity).State = EntityState.Modified;
+                return new ResultSimple();
+            })
+            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Apply() ?? new ResultSimple(1, "An error occurred while updating the entity.");
 
     /// <summary>
     /// Asynchronously removes entities from the repository based on a filter expression.
@@ -241,15 +244,18 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> RemoveAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
-    {
-        var entity = await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken);
-        if (entity != null)
-        {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                if (filterExpression is null)
+                    return new ResultSimple(1, "Filter expression cannot be null.");
+
+                var entity = await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken);
+                if (entity != null)
+                    _dbSet.Remove(entity);
+                    
+                return new ResultSimple();
+            })
+            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by filter expression.");
 
     /// <summary>
     /// Asynchronously removes an entity from the repository by its unique identifier.
@@ -258,15 +264,18 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> RemoveByIdAsync(TId id, CancellationToken cancellationToken = default)
-    {
-        var entity = await _dbSet.FindAsync([id], cancellationToken);
-        if (entity != null)
-        {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                if (id is null)
+                    return new ResultSimple(1, "ID cannot be null.");
+
+                var entity = await _dbSet.FindAsync([id], cancellationToken);
+                if (entity != null)
+                    _dbSet.Remove(entity);
+                    
+                return new ResultSimple();
+            })
+            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Apply() ?? new ResultSimple(1, "An error occurred while removing the entity by ID.");
 
     /// <summary>
     /// Asynchronously removes multiple entities from the repository based on a filter expression.
@@ -275,15 +284,18 @@ public class SqlServerRepository<TId, TEntity> : IRepository<TId, TEntity>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="ResultSimple"/> indicating the outcome.</returns>
     public async Task<ResultSimple> RemoveRangeAsync(Expression<Func<TEntity, bool>> filterExpression, CancellationToken cancellationToken = default)
-    {
-        var entities = await _dbSet.Where(filterExpression).ToListAsync(cancellationToken);
-        if (entities is not null && entities.Count != 0)
-        {
-            _dbSet.RemoveRange(entities);
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        return new ResultSimple();
-    }
+        => await this.Try(async () => {
+                if (filterExpression is null)
+                    return new ResultSimple(1, "Filter expression cannot be null.");
+
+                var entities = await _dbSet.Where(filterExpression).ToListAsync(cancellationToken);
+                if (entities is not null && entities.Count != 0)
+                    _dbSet.RemoveRange(entities);
+
+                return new ResultSimple();
+            })
+            .Catch(async (error) => await Task.FromResult(new ResultSimple(1, error.Message)))
+            .Apply() ?? new ResultSimple(1, "An error occurred while removing entities by filter expression.");
 
     #endregion
 
