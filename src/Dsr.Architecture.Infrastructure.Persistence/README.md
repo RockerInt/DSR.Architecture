@@ -2,11 +2,12 @@
 
 ![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence?style=flat-square)
 
-Infrastructure persistence library for the DSR.Architecture solution. This project provides generic repository interfaces and implementations for data access, supporting multiple storage providers and patterns. It enables modular, scalable, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
+Infrastructure persistence library for the DSR.Architecture solution. This project provides generic repository interfaces and implementations for data access, supporting multiple storage providers and patterns. Too provides generic UnitOfWork abstraction for manage a repositories and save changes in a context. It enables modular, scalable, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
 
 ## Features
 
 - **Generic Repository Pattern**: Abstractions for CRUD operations and querying entities.
+- **Generic UnitOfWork Pattern**: Abstractions for manage a repositories and save changes in a context.
 - **Support for Multiple Providers**: Easily extendable to different database/storage technologies.
 - **Integration with Domain Layer**: Works seamlessly with domain entities and value objects.
 - **Configuration and Dependency Injection**: Uses Microsoft.Extensions for configuration and DI.
@@ -25,6 +26,7 @@ dotnet add package DSR.Architecture.Infrastructure.Persistence
 
 ## Dependencies
 
+- [Microsoft.EntityFrameworkCore](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore/)
 - [Microsoft.Extensions.Configuration](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
 - [Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection)
 - [Microsoft.Extensions.Options](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.options)

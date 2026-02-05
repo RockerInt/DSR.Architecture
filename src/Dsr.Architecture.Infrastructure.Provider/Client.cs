@@ -7,25 +7,20 @@ namespace Dsr.Architecture.Infrastructure.Provider;
 /// <summary>
 /// Class for REST communication with WebAPIs
 /// </summary>
-public class Client : IClient
+/// <param name="baseAddress">Base address of the HTTP client</param>
+/// <param name="baseHeaders">Base headers for all HTTP requests</param>
+/// <param name="httpClient">Optional custom HttpClient instance</param>
+public class Client(HttpClient httpClient, string baseAddress, Dictionary<string, string>? baseHeaders = null) : IClient
 {
-    /// <summary>
-    /// Base address of the HTTP client
-    /// </summary>
-    private string BaseAddress { get; set; }
-
     /// <summary>
     /// Base headers for all HTTP requests
     /// </summary>
-    private Dictionary<string, string>? BaseHeaders { get; set; }
+    private Dictionary<string, string>? _baseHeaders { get; set; } = baseHeaders;
 
     /// <summary>
-    /// HTTP client constructor
+    /// Gets the base address of the HTTP client
     /// </summary>
-    /// <param name="baseAddress">Base address for requests</param>
-    /// <param name="baseHeaders">Optional base headers</param>
-    public Client(string baseAddress, Dictionary<string, string>? baseHeaders = null)
-        => (BaseAddress, BaseHeaders) = (baseAddress, baseHeaders);
+    public HttpClient HttpClient { get; } = httpClient ?? new HttpClient() { BaseAddress = new Uri(baseAddress) };
 
     /// <summary>
     /// Performs a GET request to the server
@@ -36,7 +31,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Get<TResponse>(string path, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Get, BaseAddress, path, null, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Get, httpClient, path, null, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -51,7 +46,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Post<TResponse>(string path, string request, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Post, BaseAddress, path, request, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Post, httpClient, path, request, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -67,7 +62,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Post<TRequest, TResponse>(string path, TRequest request, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Post, BaseAddress, path, request, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Post, httpClient, path, request, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -82,7 +77,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Update<TResponse>(string path, string request, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Put, BaseAddress, path, request, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Put, httpClient, path, request, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -98,7 +93,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Update<TRequest, TResponse>(string path, TRequest request, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Put, BaseAddress, path, request, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Put, httpClient, path, request, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -112,7 +107,7 @@ public class Client : IClient
     /// <returns>A task resulting in a Result object containing the deserialized response</returns>
     public async Task<Result<TResponse>> Delete<TResponse>(string path, Dictionary<string, string>? headers = null)
     {
-        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Delete, BaseAddress, path, null, ValidateHeaders(headers));
+        var result = await WebUtilities.ConectAsync(Utilities.Enums.Method.Delete, httpClient, path, null, ValidateHeaders(headers));
 
         return new Result<TResponse>(result.MapResponse<TResponse>());
     }
@@ -124,10 +119,10 @@ public class Client : IClient
     /// <returns>A dictionary with the combined headers</returns>
     private Dictionary<string, string>? ValidateHeaders(Dictionary<string, string>? headers)
     {
-        if (headers == null) return BaseHeaders;
-        if (BaseHeaders == null) return headers;
+        if (headers == null) return _baseHeaders;
+        if (_baseHeaders == null) return headers;
 
-        var newHeaders = new Dictionary<string, string>(BaseHeaders);
+        var newHeaders = new Dictionary<string, string>(_baseHeaders);
 
         foreach (var header in headers)
         {
