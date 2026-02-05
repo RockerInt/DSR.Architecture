@@ -88,6 +88,77 @@ public static class WebUtilities
     }
 
     /// <summary>
+    /// Asynchronously sends an HTTP request with the specified method, base address, path, and data.
+    /// </summary>
+    /// <typeparam name="T">Type of the data to be sent.</typeparam>
+    /// <param name="method">HTTP method to be used.</param>
+    /// <param name="client">HTTP client to be used.</param>
+    /// <param name="path">Path of the HTTP request.</param>
+    /// <param name="data">Data to be sent with the request.</param>
+    /// <param name="headers">Optional headers to be included in the request.</param>
+    /// <returns>HTTP response message.</returns>
+    public async static Task<HttpResponseMessage> ConectAsync<T>(Method method, HttpClient client, string path, T data, Dictionary<string, string>? headers = null)
+    {
+        string httpContent = JsonConvert.SerializeObject(data);
+
+        if (headers != null)
+        {
+            foreach (var entry in headers)
+            {
+                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
+            }
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+        }
+
+        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
+
+        return method switch
+        {
+            Method.Get => await client.GetAsync(path),
+            Method.Put => await client.PutAsync(path, stringContent),
+            Method.Delete => await client.DeleteAsync(path),
+            _ => await client.PostAsync(path, stringContent),
+        };
+    }
+
+    /// <summary>
+    /// Asynchronously sends an HTTP request with the specified method, base address, path, and content string.
+    /// </summary>
+    /// <param name="method">HTTP method to be used.</param>
+    /// <param name="client">HTTP client to be used.</param>
+    /// <param name="path">Path of the HTTP request.</param>
+    /// <param name="httpContent">Content to be sent with the request as a string.</param>
+    /// <param name="headers">Optional headers to be included in the request.</param>
+    /// <returns>HTTP response message.</returns>
+    public async static Task<HttpResponseMessage> ConectAsync(Method method, HttpClient client, string path, string? httpContent, Dictionary<string, string>? headers = null)
+    {
+        if (headers != null)
+        {
+            foreach (var entry in headers)
+            {
+                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
+            }
+        }
+        else
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+        }
+
+        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
+
+        return method switch
+        {
+            Method.Get => await client.GetAsync(path),
+            Method.Put => await client.PutAsync(path, stringContent),
+            Method.Delete => await client.DeleteAsync(path),
+            _ => await client.PostAsync(path, stringContent),
+        };
+    }
+
+    /// <summary>
     /// Synchronously sends an HTTP request with the specified method, base address, path, and data.
     /// </summary>
     /// <typeparam name="T">Type of the data to be sent.</typeparam>
@@ -111,6 +182,31 @@ public static class WebUtilities
     /// <returns>HTTP response message.</returns>
     public static HttpResponseMessage Conect(Method method, string baseAddress, string path, string? httpContent, Dictionary<string, string>? headers = null)
         => ConectAsync(method, baseAddress, path, httpContent, headers).Result;
+
+    /// <summary>
+    /// Synchronously sends an HTTP request with the specified method, base address, path, and data.
+    /// </summary>
+    /// <typeparam name="T">Type of the data to be sent.</typeparam>
+    /// <param name="method">HTTP method to be used.</param>
+    /// <param name="client">HTTP client to be used.</param>
+    /// <param name="path">Path of the HTTP request.</param>
+    /// <param name="data">Data to be sent with the request.</param>
+    /// <param name="headers">Optional headers to be included in the request.</param>
+    /// <returns>HTTP response message.</returns>
+    public static HttpResponseMessage Conect<T>(Method method, HttpClient client, string path, T data, Dictionary<string, string>? headers = null)
+        => ConectAsync(method, client, path, data, headers).Result;
+
+    /// <summary>
+    /// Synchronously sends an HTTP request with the specified method, base address, path, and content string.
+    /// </summary>
+    /// <param name="method">HTTP method to be used.</param>
+    /// <param name="client">HTTP client to be used.</param>
+    /// <param name="path">Path of the HTTP request.</param>
+    /// <param name="httpContent">Content to be sent with the request as a string.</param>
+    /// <param name="headers">Optional headers to be included in the request.</param>
+    /// <returns>HTTP response message.</returns>
+    public static HttpResponseMessage Conect(Method method, HttpClient client, string path, string? httpContent, Dictionary<string, string>? headers = null)
+        => ConectAsync(method, client, path, httpContent, headers).Result;
 
     /// <summary>
     /// Validates the content of an HTTP response.
