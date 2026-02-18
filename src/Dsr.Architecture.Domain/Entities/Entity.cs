@@ -1,6 +1,4 @@
-﻿using Dsr.Architecture.Domain.Interfaces;
-
-namespace Dsr.Architecture.Domain.Entities;
+﻿namespace Dsr.Architecture.Domain.Entities;
 
 /// <summary>
 /// Abstract base class for an entity with a dynamic identifier.
@@ -25,6 +23,23 @@ public abstract class Entity(dynamic? id) : IEntity
     /// Date and time when the entity was created.
     /// </summary>
     public DateTime CreateDate { get; set; } = DateTime.UtcNow;
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Entity other)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        if (GetType() != other.GetType())
+            return false;
+
+        return Id?.Equals(other.Id) ?? other.Id == null;
+    }
+
+    public override int GetHashCode()
+        => HashCode.Combine(GetType(), Id);
 }
 
 /// <summary>
@@ -50,5 +65,29 @@ public abstract class Entity<TId> : Entity, IEntity<TId>
         get => (TId?)base.Id;
         set => base.Id = value;
     }
+    /// <summary>
+    /// Determines whether the specified object is equal to the current entity based on the identifier.
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not Entity<TId> other)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        if (GetType() != other.GetType())
+            return false;
+
+        return Id?.Equals(other.Id) ?? other.Id == null;
+    }
+    /// <summary>
+    /// Returns a hash code for the entity based on its type and identifier.
+    /// </summary>
+    /// <returns></returns>
+    public override int GetHashCode()
+        => HashCode.Combine(GetType(), Id);
 }
 
