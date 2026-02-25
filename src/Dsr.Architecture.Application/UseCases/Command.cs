@@ -10,13 +10,9 @@ namespace Dsr.Architecture.Application.UseCases;
 /// Constructor for UseCase.
 /// </remarks>
 /// <param name="request">Optional request object (stored as dynamic for runtime flexibility).</param>
-public abstract class UseCase<TResponse>(object? request = null) : IUseCase<TResponse>
+public abstract class Command<TResponse>(object? request = null) : UseCase<TResponse>(request), ICommand<TResponse>, IUseCase<TResponse>
     where TResponse : IResult
 {
-    /// <summary>
-    /// The dynamic request object.
-    /// </summary>
-    public dynamic? Request { get; set; } = request;
 }
 
 /// <summary>
@@ -24,14 +20,14 @@ public abstract class UseCase<TResponse>(object? request = null) : IUseCase<TRes
 /// </summary>
 /// <typeparam name="TRequest">The type of the request.</typeparam>
 /// <typeparam name="TResponse">The type of the response.</typeparam>
-public abstract class UseCase<TRequest, TResponse> : UseCase<TResponse>, IUseCase<TRequest, TResponse>
+public abstract class Command<TRequest, TResponse> : UseCase<TRequest, TResponse>, ICommand<TRequest, TResponse>, IUseCase<TRequest, TResponse>
     where TResponse : IResult
 {
     /// <summary>
     /// Constructor for UseCase with a strongly-typed request.
     /// </summary>
     /// <param name="request">The strongly-typed request object.</param>
-    public UseCase(TRequest? request) : base(request)
+    public Command(TRequest? request) : base(request)
         => Request = request;
 
     /// <summary>
