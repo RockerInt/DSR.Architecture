@@ -2,18 +2,17 @@
 
 ![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Domain?style=flat-square)
 
-Core domain library for the DSR.Architecture solution. Contains the essential building blocks for domain-driven design: entities, value objects, domain events, aggregates, result types, validation, repository abstractions, and specifications. Designed to be modular and scalable as the foundation for enterprise applications built with DSR.Architecture.
+Core domain library for the DSR.Architecture solution. Contains the essential building blocks for domain-driven design: entities, value objects, domain events, aggregates, result types, validation and repository abstractions. Designed to be modular and scalable as the foundation for enterprise applications built with DSR.Architecture.
 
 ## Features
 
 - **Entities**: Core domain objects with identity and lifecycle (`Entity<TId>`, `IEntity<TId>`).
 - **Value Objects**: Immutable types representing descriptive aspects of the domain (`ValueObject`).
-- **Aggregates**: Aggregate roots and interfaces for consistency boundaries (`IAggregateRoot`, `AggregateRoot<TId>`).
+- **Aggregates**: Aggregate roots and interfaces for consistency boundaries (`IAggregateRoot<TId>`, `AggregateRoot<TId>`).
 - **Domain Events**: Events that capture significant domain occurrences (`IDomainEvent`, `DomainEvent`, `IDomainEventDispatcher`, `IEventContextAccessor`, `EventMetadata`).
 - **Result**: Explicit operation outcomes with success/error/warnings (`IResult`, `Result`, `ResultStatus`, `Error`, `ErrorList`, `PagedResult`).
 - **Validation**: Guard clauses and validation collectors with typed errors (`Guard`, `ValidationCollector`, `DomainError`, `ErrorSeverity`, `ErrorType`) and extensions for strings, numerics, dates, and collections.
-- **Repository Abstractions**: Interfaces for persistence and unit of work (`IRepository`, `IUnitOfWork`, `IAggregateRepository`, `IEventSourcedRepository`).
-- **Specifications**: Query specification pattern with criteria, includes, ordering, paging, and AsNoTracking (`ISpecification<T>`, `Specification<T>`, `SpecificationExpressionExtensions.Apply`).
+- **Repository Abstractions**: Interfaces for persistence and unit of work (`IRepository`, `IReadRepository`, `IWriteRepository`, `IUnitOfWork`, `IEventSourcedRepository`).
 - **Domain Services**: Abstraction for domain services (`IDomainServices`).
 - **Exceptions**: Base domain exception (`DomainException`).
 
