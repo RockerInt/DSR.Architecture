@@ -23,6 +23,12 @@ jobs:
               - 'src/Dsr.Architecture.Application/**'
             Dsr.Architecture.Domain:
               - 'src/Dsr.Architecture.Domain/**'
+            Dsr.Architecture.Domain.Specifications:
+              - 'src/Dsr.Architecture.Domain.Specifications/**'
+            Dsr.Architecture.EventSourcing:
+              - 'src/Dsr.Architecture.EventSourcing/**'
+            Dsr.Architecture.Outbox:
+              - 'src/Dsr.Architecture.Outbox/**'
             Dsr.Architecture.Infrastructure.Persistence:
               - 'src/Dsr.Architecture.Infrastructure.Persistence/**'
             Dsr.Architecture.Infrastructure.Persistence.EntityFramework:
