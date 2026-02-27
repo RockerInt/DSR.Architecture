@@ -2,7 +2,7 @@
 
 ![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Domain?style=flat-square)
 
-Core domain library for the DSR.Architecture solution. Contains the essential building blocks for domain-driven design: entities, value objects, domain events, aggregates, result types, validation and repository abstractions. Designed to be modular and scalable as the foundation for enterprise applications built with DSR.Architecture.
+Core domain library for the DSR.Architecture solution. Contains the essential building blocks for domain-driven design: entities, value objects, domain events, aggregates, result types and validation. Designed to be modular and scalable as the foundation for enterprise applications built with DSR.Architecture.
 
 ## Features
 
@@ -12,13 +12,12 @@ Core domain library for the DSR.Architecture solution. Contains the essential bu
 - **Domain Events**: Events that capture significant domain occurrences (`IDomainEvent`, `DomainEvent`, `IDomainEventDispatcher`, `IEventContextAccessor`, `EventMetadata`).
 - **Result**: Explicit operation outcomes with success/error/warnings (`IResult`, `Result`, `ResultStatus`, `Error`, `ErrorList`, `PagedResult`).
 - **Validation**: Guard clauses and validation collectors with typed errors (`Guard`, `ValidationCollector`, `DomainError`, `ErrorSeverity`, `ErrorType`) and extensions for strings, numerics, dates, and collections.
-- **Repository Abstractions**: Interfaces for persistence and unit of work (`IRepository`, `IReadRepository`, `IWriteRepository`, `IUnitOfWork`, `IEventSourcedRepository`).
 - **Domain Services**: Abstraction for domain services (`IDomainServices`, `IDomainPolcy`).
 - **Exceptions**: Base domain exception (`DomainException`).
 
 ## Usage
 
-Add this package as a dependency to other projects in the DSR.Architecture solution to share domain models, result types, and persistence abstractions.
+Add this package as a dependency to other projects in the DSR.Architecture solution to share domain models and result types. Too for create a modular and clean architecture solutions.
 
 ## Installation
 
