@@ -5,6 +5,7 @@
 This is the base library for the persistence layer of the **Dsr.Architecture** solution. It provides the common configurations, settings, and abstractions required to implement data access across the various supported providers within the ecosystem.
 
 It serves as the fundamental base for specific infrastructure implementations:
+
 - **Dsr.Architecture.Infrastructure.Persistence.EntityFramework**: Implementation for relational databases such as **SQL Server, MySQL, PostgreSQL, and SQLite**.
 - **Dsr.Architecture.Infrastructure.Persistence.Mongo**: Implementation for **MongoDB**.
 
