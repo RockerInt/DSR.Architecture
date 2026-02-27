@@ -13,7 +13,7 @@ Core domain library for the DSR.Architecture solution. Contains the essential bu
 - **Result**: Explicit operation outcomes with success/error/warnings (`IResult`, `Result`, `ResultStatus`, `Error`, `ErrorList`, `PagedResult`).
 - **Validation**: Guard clauses and validation collectors with typed errors (`Guard`, `ValidationCollector`, `DomainError`, `ErrorSeverity`, `ErrorType`) and extensions for strings, numerics, dates, and collections.
 - **Repository Abstractions**: Interfaces for persistence and unit of work (`IRepository`, `IReadRepository`, `IWriteRepository`, `IUnitOfWork`, `IEventSourcedRepository`).
-- **Domain Services**: Abstraction for domain services (`IDomainServices`).
+- **Domain Services**: Abstraction for domain services (`IDomainServices`, `IDomainPolcy`).
 - **Exceptions**: Base domain exception (`DomainException`).
 
 ## Usage
