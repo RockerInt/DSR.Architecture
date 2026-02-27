@@ -29,16 +29,12 @@ jobs:
               - 'src/Dsr.Architecture.EventSourcing/**'
             Dsr.Architecture.Outbox:
               - 'src/Dsr.Architecture.Outbox/**'
-            Dsr.Architecture.Infrastructure.Persistence:
-              - 'src/Dsr.Architecture.Infrastructure.Persistence/**'
+            Dsr.Architecture.Persistence.Abstractions:
+              - 'src/Dsr.Architecture.Persistence.Abstractions/**'
             Dsr.Architecture.Infrastructure.Persistence.EntityFramework:
               - 'src/Dsr.Architecture.Infrastructure.Persistence.EntityFramework/**'
             Dsr.Architecture.Infrastructure.Persistence.Mongo:
               - 'src/Dsr.Architecture.Infrastructure.Persistence.Mongo/**'
-            Dsr.Architecture.Infrastructure.Persistence.SqlLite:
-              - 'src/Dsr.Architecture.Infrastructure.Persistence.SqlLite/**'
-            Dsr.Architecture.Infrastructure.Persistence.SqlServer:
-              - 'src/Dsr.Architecture.Infrastructure.Persistence.SqlServer/**'
             Dsr.Architecture.Infrastructure.Provider:
               - 'src/Dsr.Architecture.Infrastructure.Provider/**'
             Dsr.Architecture.TryCatch:
