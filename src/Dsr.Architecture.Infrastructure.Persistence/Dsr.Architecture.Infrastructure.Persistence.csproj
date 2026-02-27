@@ -1,21 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Authors>Jonathan Jimenez</Authors>
     <Company>Jonathan Jimenez</Company>
     <Description>
-      Application layer for DSR.Architecture. Implements use cases, application services, validation, and orchestration of domain logic. 
-      Bridges the domain model with external interfaces and coordinates business processes in a modular, scalable enterprise solution.
+      Infrastructure persistence layer for DSR.Architecture. Provides data access and persistence abstractions for domain entities, including repository implementations. 
+      Designed for modular, scalable enterprise applications as part of the DSR.Architecture solution.
     </Description>
-    <PackageTags>application-layer;use-cases;services;validation;orchestration;architecture;enterprise;modular;dsr-architecture</PackageTags>
+    <PackageTags>infrastructure;persistence;repositories;domain-entities;architecture;enterprise;modular;dsr-architecture</PackageTags>
     <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.8</Version>
+    <Version>1.0.9</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,13 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dsr.Architecture.Domain" Version="1.0.1" />
-    <PackageReference Include="Dsr.Architecture.Utilities" Version="1.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.7" />
+    <ProjectReference Include="..\Dsr.Architecture.Domain\Dsr.Architecture.Domain.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.3" />
   </ItemGroup>
 
 </Project>

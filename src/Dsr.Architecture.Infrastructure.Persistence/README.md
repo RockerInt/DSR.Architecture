@@ -1,45 +1,76 @@
-# DSR.Architecture.Infrastructure.Persistence
+# Dsr.Architecture.Infrastructure.Persistence
 
 ![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Infrastructure.Persistence?style=flat-square)
 
-Infrastructure persistence library for the DSR.Architecture solution. This project provides generic repository interfaces and implementations for data access, supporting multiple storage providers and patterns. Too provides generic UnitOfWork abstraction for manage a repositories and save changes in a context. It enables modular, scalable, and testable enterprise solutions as part of the DSR.Architecture ecosystem.
+This is the base library for the persistence layer of the **Dsr.Architecture** solution. It provides the common configurations, settings, and abstractions required to implement data access across the various supported providers within the ecosystem.
+
+It serves as the fundamental base for specific infrastructure implementations:
+- **Dsr.Architecture.Infrastructure.Persistence.EntityFramework**: Implementation for relational databases such as **SQL Server, MySQL, PostgreSQL, and SQLite**.
+- **Dsr.Architecture.Infrastructure.Persistence.Mongo**: Implementation for **MongoDB**.
 
 ## Features
 
-- **Generic Repository Pattern**: Abstractions for CRUD operations and querying entities.
-- **Generic UnitOfWork Pattern**: Abstractions for manage a repositories and save changes in a context.
-- **Support for Multiple Providers**: Easily extendable to different database/storage technologies.
-- **Integration with Domain Layer**: Works seamlessly with domain entities and value objects.
-- **Configuration and Dependency Injection**: Uses Microsoft.Extensions for configuration and DI.
+- **Unified Configuration**: Defines `PersistenceSettings` to centrally manage the database provider, database names, and connection strings.
+- **Settings Abstraction**: Provides the `IPersistenceSettings` interface to facilitate the injection of persistence configurations.
+- **Base Dependency Injection**: Includes the `AddPersistenceServicesBase` extension method to simplify the registration and binding of configurations from .NET's `IConfiguration`.
+- **Domain Integration**: Aligned with the abstractions of `Dsr.Architecture.Domain`.
 
-## Usage
+## Configuration
 
-Reference this package in your infrastructure projects to implement data access and persistence logic for DSR.Architecture-based solutions.
+To use this base (usually through one of the implementation packages), you must configure the `PersistenceSettings` section in your `appsettings.json`:
+
+```json
+{
+  "PersistenceSettings": {
+    "DatabaseProvider": "SqlServer", // Options: sqlserver, mysql, postgresql, sqlite, mongodb
+    
+    "ReadDatabaseName": "MyApplicationReadDb",
+    "ConnectionStringName": "DefaultConnection",
+    "ReadConnectionStringName": "DefaultReadConnection"
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=myServer;Database=myDb;User Id=myUser;Password=myPassword;",
+    "DefaultReadConnection": "Server=myServer;Database=myReadDb;User Id=myUser;Password=myPassword;"
+  }
+}
+```
+
+or
+
+```json
+{
+  "PersistenceSettings": {
+    "DatabaseProvider": "PostgreSQL", 
+    "DatabaseName": "AppDb",
+    "ReadDatabaseName": "AppReadDb",
+    "ConnectionString": "Server=myServer;Database=myDb;User Id=myUser;Password=myPassword;",
+    "ReadConnectionString": "Server=myServer;Database=myReadDb;User Id=myUser;Password=myPassword;"
+  },
+}
+```
 
 ## Installation
 
-Once published, install via NuGet:
+Install via NuGet:
 
 ```bash
-dotnet add package DSR.Architecture.Infrastructure.Persistence
+dotnet add package Dsr.Architecture.Infrastructure.Persistence
 ```
 
 ## Dependencies
 
-- [Microsoft.EntityFrameworkCore](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore/)
-- [Microsoft.Extensions.Configuration](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
-- [Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection)
-- [Microsoft.Extensions.Options](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.options)
-- DSR.Architecture.Domain (project reference)
-- DSR.Architecture.Utilities (project reference)
+- [Dsr.Architecture.Domain](https://www.nuget.org/packages/Dsr.Architecture.Domain/) (project reference)  
+- [Microsoft.Extensions.Configuration](https://www.nuget.org/packages/Microsoft.Extensions.Configuration/)
+- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
+- [Microsoft.Extensions.Options](https://www.nuget.org/packages/Microsoft.Extensions.Options/)
 
 ## Contributing
 
-Contributions are welcome! Please submit issues or pull requests via [GitHub](https://github.com/RockerInt/DSR.Architecture).
+Contributions are welcome! Please submit issues or pull requests through the official repository on [GitHub](https://github.com/RockerInt/DSR.Architecture).
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/RockerInt/DSR.Architecture/LICENSE) for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/RockerInt/DSR.Architecture/blob/main/LICENSE) file for more details.
 
 ## Authors
 
@@ -47,4 +78,4 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 
 ## Tags
 
-infrastructure, persistence, repository, data-access, storage, architecture, modular, enterprise,
+infrastructure, persistence, database, repository, data-access, storage, architecture, modular, enterprise, dsr-architecture

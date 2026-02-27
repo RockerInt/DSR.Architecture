@@ -36,9 +36,9 @@ dotnet add package DSR.Architecture.Application
 ## Dependencies
 
 - [Ardalis.Result](https://github.com/ardalis/Ardalis.Result)
+- [Dsr.Architecture.Domain](https://github.com/RockerInt/DSR.Architecture/tree/main/src/Dsr.Architecture.Domain) (project reference)
 - [FluentValidation](https://fluentvalidation.net/)
 - [Microsoft.Extensions.Logging.Abstractions](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.abstractions)
-- [DSR.Architecture.Domain](https://github.com/RockerInt/DSR.Architecture/tree/main/src/Dsr.Architecture.Domain) (project reference)
 
 ## Contributing
 
@@ -54,4 +54,4 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 
 ## Tags
 
-application-layer, use-cases, services, validation, orchestration, architecture, enterprise, modular,
+application-layer, use-cases, services, validation, orchestration, architecture, enterprise, modular
