@@ -7,6 +7,7 @@ This package contains the core abstractions and interfaces for the persistence l
 ## Interfaces Provided
 
 - **IUnitOfWork**: Contract for coordinating multiple repository operations and committing changes as a single transaction.
+- **ITransactionalUnitOfWork**: Contract for coordinating multiple repository operations and committing changes in a transactional context, ensuring data consistency and integrity with a rollback mechanism in case of errors.
 - **IRepository<TAggregate, TId>**: Base contract for standard CRUD operations on domain aggregates.
 - **IReadRepository<TAggregate, TId>**: Contract focused on data retrieval operations (read-only).
 - **IWriteRepository<TAggregate, TId>**: Contract focused on data modification operations (write-only).
