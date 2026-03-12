@@ -1,8 +1,9 @@
 using System.Linq.Expressions;
+using Dsr.Architecture.Domain.Aggregates;
 
 namespace Dsr.Architecture.Domain.Specifications.Extensions;
 
-public static class SpecificationExpressionExtensions
+public static class SpecificationExtensions
 {
     /*public static IQueryable<T> Apply<T>(this IQueryable<T> query, ISpecification<T> specification)
     {
