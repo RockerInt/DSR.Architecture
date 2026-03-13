@@ -9,9 +9,9 @@ public interface ITransactionalUnitOfWork : IUnitOfWork
     /// Executes the specified operation within a transaction. 
     /// If the operation completes successfully, the transaction is committed; otherwise, it is rolled back.
     /// </summary>
-    /// <param name="operation"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="operation">The operation to be executed within the transaction.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task ExecuteInTransactionAsync(
         Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default);

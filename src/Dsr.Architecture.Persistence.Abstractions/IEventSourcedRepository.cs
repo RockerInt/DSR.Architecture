@@ -15,25 +15,22 @@ public interface IEventSourcedRepository<T, TId>
     /// <summary>
     /// Loads an aggregate from the event store by its identifier.
     /// </summary>
-    /// <param name="aggregateId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="aggregateId">The unique identifier of the aggregate to load.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the loaded aggregate.</returns>
     Task<Result<T>> LoadAsync(TId aggregateId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Saves an aggregate to the event store, along with its uncommitted events.
-    /// The expectedVersion parameter is used for optimistic concurrency control, ensuring that the aggregate has not been modified by another process since it was loaded. 
-    /// If the expected version does not match the current version of the aggregate in the event store, the save operation should fail, 
-    /// preventing potential conflicts and ensuring data integrity. The method should return a Result indicating the success or failure of the save operation, 
-    /// allowing the caller to handle any errors or concurrency issues that may arise during the save process. 
-    /// The implementation of this method should ensure that all uncommitted events from the aggregate are properly persisted to the event store, 
-    /// and that the aggregate's version is updated accordingly to reflect the changes made. 
-    /// This helps to maintain the integrity of the event-sourced system and ensures that all changes to 
-    /// the aggregate are properly recorded and can be replayed to reconstruct the aggregate's state in the future.
     /// </summary>
-    /// <param name="aggregate"></param>
-    /// <param name="expectedVersion"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <remarks>
+    /// The <paramref name="expectedVersion"/> parameter is used for optimistic concurrency control.
+    /// If the version does not match the current version in the store, the operation fails.
+    /// </remarks>
+    /// <param name="aggregate">The aggregate root containing uncommitted events to save.</param>
+    /// <param name="expectedVersion">The version the aggregate is expected to have in the store for concurrency control.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, indicating the outcome of the save process.</returns>
     Task<Result> SaveAsync(
         T aggregate,
         int expectedVersion,

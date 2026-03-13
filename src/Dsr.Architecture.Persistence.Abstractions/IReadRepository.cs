@@ -1,5 +1,6 @@
 using Dsr.Architecture.Domain.Aggregates;
 using Dsr.Architecture.Domain.Result;
+using Dsr.Architecture.Domain.Specifications;
 using System.Linq.Expressions;
 
 namespace Dsr.Architecture.Persistence.Abstractions;
@@ -17,96 +18,90 @@ public interface IReadRepository<TId, TAggregate>
     #region Sync
 
     /// <summary>
-    /// Provides an <see cref="IQueryable{TAggregate}"/> for building complex queries against the aggregate collection.
-    /// </summary>
-    /// <returns>An <see cref="IQueryable{TAggregate}"/> instance.</returns>
-    IQueryable<TAggregate> AsQueryable();
-
-    /// <summary>
     /// Retrieves all aggregates from the repository.
     /// </summary>
-    /// <returns>A <see cref="Result{T}"/> with a collection of all aggregates.</returns>
-    Result<IEnumerable<TAggregate>> GetAll();
-
-    /// <summary>
-    /// Retrieves aggregates that match the specified filter expression.
-    /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
-    /// <returns>A <see cref="Result{T}"/> with a collection of matching aggregates.</returns>
-    Result<IEnumerable<TAggregate>> GetBy(
-        Expression<Func<TAggregate, bool>> filterExpression);
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{IEnumerable{TAggregate}}"/> with a collection of all aggregates.</returns>
+    Result<IEnumerable<TAggregate>> List(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
     /// Retrieves and projects aggregates that match the specified filter expression to a different type.
     /// </summary>
     /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
-    /// <param name="projectionExpression">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
-    /// <returns>A <see cref="Result{T}"/> with a collection of projected aggregates.</returns>
-    Result<IEnumerable<TProjected>> GetBy<TProjected>(
-        Expression<Func<TAggregate, bool>> filterExpression,
-        Expression<Func<TAggregate, TProjected>> projectionExpression);
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="projection">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
+    /// <returns>A <see cref="Result{IEnumerable{TProjected}}"/> with a collection of projected aggregates.</returns>
+    Result<IEnumerable<TProjected>> List<TProjected>(
+        ISpecification<TId, TAggregate> specification,
+        Expression<Func<TAggregate, TProjected>> projection);
 
     /// <summary>
     /// Finds the first aggregate that matches the given filter expression.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
-    /// <returns>A <see cref="Result{T}"/> with the first matching aggregate.</returns>
-    Result<TAggregate> First(Expression<Func<TAggregate, bool>> filterExpression);
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    Result<TAggregate> First(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
     /// Retrieves an aggregate by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
-    /// <returns>A <see cref="Result{T}"/> with the retrieved aggregate.</returns>
+    /// <returns>A <see cref="Result{TAggregate}"/> with the retrieved aggregate.</returns>
     Result<TAggregate> GetById(TId id);
+
+    /// <summary>
+    /// Checks if any aggregate matches the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>True if at least one aggregate matches; otherwise, false.</returns>
+    bool Any(ISpecification<TId, TAggregate> specification);
+
+    /// <summary>
+    /// Counts the number of aggregates that match the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>The total number of matching aggregates.</returns>
+    int Count(ISpecification<TId, TAggregate> specification);
 
     #endregion Sync
 
     #region Async
 
     /// <summary>
-    /// Asynchronously retrieves all aggregates from the repository.
-    /// </summary>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all aggregates.</returns>
-    Task<Result<IEnumerable<TAggregate>>> GetAllAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Asynchronously retrieves aggregates that match the specified filter expression.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
+    /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching aggregates.</returns>
-    Task<Result<IEnumerable<TAggregate>>> GetByAsync(
-        Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TAggregate}}"/> with a collection of matching aggregates.</returns>
+    Task<Result<IEnumerable<TAggregate>>> ListAsync(
+        ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously retrieves and projects aggregates that match the specified filter expression to a different type.
     /// </summary>
     /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
-    /// <param name="projectionExpression">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="projection">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of projected aggregates.</returns>
-    Task<Result<IEnumerable<TProjected>>> GetByAsync<TProjected>(
-        Expression<Func<TAggregate, bool>> filterExpression,
-        Expression<Func<TAggregate, TProjected>> projectionExpression, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TProjected}}"/> with a collection of projected aggregates.</returns>
+    Task<Result<IEnumerable<TProjected>>> ListAsync<TProjected>(
+        ISpecification<TId, TAggregate> specification,
+        Expression<Func<TAggregate, TProjected>> projection, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously finds the first aggregate that matches the given filter expression.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates.</param>
+    /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching aggregate.</returns>
-    Task<Result<TAggregate>> FirstAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    Task<Result<TAggregate>> FirstAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously retrieves an aggregate by its unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved aggregate.</returns>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the retrieved aggregate.</returns>
     Task<Result<TAggregate>> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
 
     #endregion Async

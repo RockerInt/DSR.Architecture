@@ -1,6 +1,7 @@
 using Dsr.Architecture.Domain.Aggregates;
 using Dsr.Architecture.Domain.Entities;
 using Dsr.Architecture.Domain.Result;
+using Dsr.Architecture.Domain.Specifications;
 using System.Linq.Expressions;
 
 namespace Dsr.Architecture.Persistence.Abstractions;
@@ -21,29 +22,29 @@ public interface IWriteRepository<TId, TAggregate>
     /// Adds a new aggregate to the repository.
     /// </summary>
     /// <param name="aggregate">The aggregate to be added.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    Result Add(TAggregate aggregate);
+    /// <returns>A <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    Result<TAggregate> Add(TAggregate aggregate);
 
     /// <summary>
     /// Adds multiple new aggregates to the repository.
     /// </summary>
     /// <param name="aggregates">A collection of aggregates to be added.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    Result AddRange(ICollection<TAggregate> aggregates);
+    /// <returns>A <see cref="Result{ICollection{TAggregate}}"/> indicating the outcome.</returns>
+    Result<ICollection<TAggregate>> AddRange(ICollection<TAggregate> aggregates);
 
     /// <summary>
     /// Updates an existing aggregate in the repository.
     /// </summary>
     /// <param name="aggregate">The aggregate to be updated.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    Result Update(TAggregate aggregate);
+    /// <returns>A <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    Result<TAggregate> Update(TAggregate aggregate);
 
     /// <summary>
-    /// Removes aggregates from the repository based on a filter expression.
+    /// Removes aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    Result Remove(Expression<Func<TAggregate, bool>> filterExpression);
+    Result Remove(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
     /// Removes an aggregate from the repository by its unique identifier.
@@ -53,11 +54,11 @@ public interface IWriteRepository<TId, TAggregate>
     Result RemoveById(TId id);
 
     /// <summary>
-    /// Removes multiple aggregates from the repository based on a filter expression.
+    /// Removes multiple aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    Result RemoveRange(Expression<Func<TAggregate, bool>> filterExpression);
+    Result RemoveRange(ISpecification<TId, TAggregate> specification);
 
     #endregion Sync
 
@@ -68,32 +69,32 @@ public interface IWriteRepository<TId, TAggregate>
     /// </summary>
     /// <param name="aggregate">The aggregate to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    Task<Result> AddAsync(TAggregate aggregate, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    Task<Result<TAggregate>> AddAsync(TAggregate aggregate, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously adds multiple new aggregates to the repository.
     /// </summary>
     /// <param name="aggregates">A collection of aggregates to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    Task<Result> AddRangeAsync(ICollection<TAggregate> aggregates, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{ICollection{TAggregate}}"/> indicating the outcome.</returns>
+    Task<Result<ICollection<TAggregate>>> AddRangeAsync(ICollection<TAggregate> aggregates, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously updates an existing aggregate in the repository.
     /// </summary>
     /// <param name="aggregate">The aggregate to be updated.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    Task<Result> UpdateAsync(TAggregate aggregate, CancellationToken cancellationToken = default);
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    Task<Result<TAggregate>> UpdateAsync(TAggregate aggregate, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously removes aggregates from the repository based on a filter expression.
+    /// Asynchronously removes aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    Task<Result> RemoveAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default);
+    Task<Result> RemoveAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously removes an aggregate from the repository by its unique identifier.
@@ -104,12 +105,12 @@ public interface IWriteRepository<TId, TAggregate>
     Task<Result> RemoveByIdAsync(TId id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously removes multiple aggregates from the repository based on a filter expression.
+    /// Asynchronously removes multiple aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the aggregates to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    Task<Result> RemoveRangeAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default);
+    Task<Result> RemoveRangeAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     #endregion Async
 }

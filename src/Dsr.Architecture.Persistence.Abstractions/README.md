@@ -2,27 +2,67 @@
 
 ![NuGet Version](https://img.shields.io/nuget/v/Dsr.Architecture.Persistence.Abstractions?style=flat-square)
 
-This package contains the core abstractions and interfaces for the persistence layer within the **Dsr.Architecture** solution. It provides the contracts required to implement repositories and the Unit of Work pattern, ensuring a clean separation between domain logic and infrastructure implementations.
+`Dsr.Architecture.Persistence.Abstractions` provides the core contracts and interfaces for the persistence layer within the **Dsr.Architecture** ecosystem. It defines the standards for repositories and the Unit of Work pattern, enabling a clean separation between domain logic and specific infrastructure implementations (SQL, NoSQL, Event Store, etc.).
+
+## Key Features
+
+- **Repository Pattern**: Standardized interfaces for Read, Write, and CRUD operations.
+- **Specification Pattern Support**: Built-in support for `ISpecification` to decouple query logic from repository implementations.
+- **Unit of Work**: Coordination of multiple repository operations into a single atomic transaction.
+- **Event Sourcing Support**: Specialized interfaces for event-sourced aggregate roots.
+- **Async First**: All data-modifying and many retrieval operations support asynchronous execution.
 
 ## Interfaces Provided
 
-- **IUnitOfWork**: Contract for coordinating multiple repository operations and committing changes as a single transaction.
-- **ITransactionalUnitOfWork**: Contract for coordinating multiple repository operations and committing changes in a transactional context, ensuring data consistency and integrity with a rollback mechanism in case of errors.
-- **IRepository<TAggregate, TId>**: Base contract for standard CRUD operations on domain aggregates.
-- **IReadRepository<TAggregate, TId>**: Contract focused on data retrieval operations (read-only).
-- **IWriteRepository<TAggregate, TId>**: Contract focused on data modification operations (write-only).
-- **IEventSourcedRepository<TAggregate, TId>**: Contract for repositories handling event-sourced aggregate roots.
+- **`IUnitOfWork`**: Coordinates multiple repository operations and commits changes as a single transaction using `SaveChangesAsync`.
+- **`ITransactionalUnitOfWork`**: Extends `IUnitOfWork` to provide explicit transaction management with `ExecuteInTransactionAsync`.
+- **`IReadRepository<TId, TAggregate>`**: Focused on data retrieval, supporting specifications, projections, and pagination.
+- **`IWriteRepository<TId, TAggregate>`**: Focused on data modification (Add, Update, Remove).
+- **`IRepository<TId, TAggregate>`**: Combines both Read and Write interfaces for full CRUD capabilities.
+- **`IEventSourcedRepository<T, TId>`**: Contract for repositories handling event-sourced aggregate roots, managing event streams and snapshots.
 
-## Purpose
+## Usage Example
 
-These abstractions allow the domain and application layers to interact with data persistence without being coupled to specific database technologies. Implementations for these interfaces can be found in sibling packages such as:
+### Defining a Repository Interface
 
-- `Dsr.Architecture.Infrastructure.Persistence.EntityFramework`
-- `Dsr.Architecture.Infrastructure.Persistence.Mongo`
+```csharp
+public interface IOrderRepository : IRepository<Guid, Order>
+{
+    // Add domain-specific persistence logic here
+}
+```
+
+### Using Repositories in an Application Service
+
+```csharp
+public class CreateOrderHandler
+{
+    private readonly IOrderRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateOrderHandler(IOrderRepository repository, IUnitOfWork unitOfWork)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task Handle(Order order)
+    {
+        await _repository.AddAsync(order);
+        await _unitOfWork.SaveChangesAsync();
+    }
+}
+```
+
+## Implementations
+
+These abstractions are implemented in various infrastructure packages:
+
+- `Dsr.Architecture.Infrastructure.Persistence.EntityFramework`: Implementation using Entity Framework Core.
+- `Dsr.Architecture.Infrastructure.Persistence.Mongo`: Implementation using MongoDB.
+- `Dsr.Architecture.Infrastructure.Persistence.Dapper`: Implementation using Dapper for lightweight SQL access.
 
 ## Installation
-
-Install via NuGet:
 
 ```bash
 dotnet add package Dsr.Architecture.Persistence.Abstractions
@@ -30,7 +70,8 @@ dotnet add package Dsr.Architecture.Persistence.Abstractions
 
 ## Dependencies
 
-- [Dsr.Architecture.Domain](https://www.nuget.org/packages/Dsr.Architecture.Domain/)
+- [Dsr.Architecture.Domain](https://github.com/RockerInt/DSR.Architecture/tree/main/src/Dsr.Architecture.Domain) (project reference)
+- [Dsr.Architecture.Domain.Specifications](https://github.com/RockerInt/DSR.Architecture/tree/main/src/Dsr.Architecture.Domain.Specifications) (project reference)
 
 ## Contributing
 

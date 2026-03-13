@@ -12,12 +12,10 @@ public interface IUnitOfWork : IDisposable
 {
     /// <summary>
     /// Commits all changes made in the context of this unit of work to the database.
-    /// This method should ensure that all operations performed through the repositories
+    /// This method ensures that all operations performed through the repositories
     /// are saved atomically, meaning that either all changes are committed or none are.
-    /// The implementation of this method should handle any necessary transaction management
-    /// to ensure data integrity and consistency. It should also handle any exceptions that may occur during
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{Int32}"/> representing the asynchronous operation, containing the number of state entries written to the database.</returns>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
