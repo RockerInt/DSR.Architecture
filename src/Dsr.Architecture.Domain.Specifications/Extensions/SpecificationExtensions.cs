@@ -1,30 +1,19 @@
 using System.Linq.Expressions;
-using Dsr.Architecture.Domain.Aggregates;
 
 namespace Dsr.Architecture.Domain.Specifications.Extensions;
 
+/// <summary>
+/// Provides extension methods for combining LINQ expressions.
+/// </summary>
 public static class SpecificationExtensions
 {
-    /*public static IQueryable<T> Apply<T>(this IQueryable<T> query, ISpecification<T> specification)
-    {
-        if (specification.Criteria != null)
-        {
-            query = query.Where(specification.Criteria);
-        }
-
-        query = specification.Includes.Aggregate(query, (current, include) => current.Include(include));
-
-        return query;
-    }*/ 
-    // TODO: Implement this method in a extension method for the IQueryable<T> class in Infrastructure.Persistence.EntityFramework layer.
-
     /// <summary>
-    /// Combines two expressions with an AND operator.
+    /// Combines two expressions using a logical AND operator.
     /// </summary>
-    /// <typeparam name="T">The type of the expression.</typeparam>
-    /// <param name="left">The left expression.</param>
-    /// <param name="right">The right expression.</param>
-    /// <returns>A new expression with the two expressions combined with an AND operator.</returns>
+    /// <typeparam name="T">The type of the expression parameter.</typeparam>
+    /// <param name="left">The first expression.</param>
+    /// <param name="right">The second expression.</param>
+    /// <returns>A new expression representing the logical AND of both input expressions.</returns>
     public static Expression<Func<T, bool>> And<T>(
         this Expression<Func<T, bool>> left,
         Expression<Func<T, bool>> right)
@@ -39,12 +28,12 @@ public static class SpecificationExtensions
     }
 
     /// <summary>
-    /// Combines two expressions with an OR operator.
+    /// Combines two expressions using a logical OR operator.
     /// </summary>
-    /// <typeparam name="T">The type of the expression.</typeparam>
-    /// <param name="left">The left expression.</param>
-    /// <param name="right">The right expression.</param>
-    /// <returns>A new expression with the two expressions combined with an OR operator.</returns>
+    /// <typeparam name="T">The type of the expression parameter.</typeparam>
+    /// <param name="left">The first expression.</param>
+    /// <param name="right">The second expression.</param>
+    /// <returns>A new expression representing the logical OR of both input expressions.</returns>
     public static Expression<Func<T, bool>> Or<T>(
         this Expression<Func<T, bool>> left,
         Expression<Func<T, bool>> right)

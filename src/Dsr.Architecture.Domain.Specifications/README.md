@@ -6,8 +6,8 @@ Specification pattern library for the DSR.Architecture solution. Provides compos
 
 ## Features
 
-- **ISpecification&lt;T&gt;**: Contract for criteria, includes (expression and string), order by, take/skip, and AsNoTracking.
-- **Specification&lt;T&gt;**: Base class to define specifications with `AddInclude`, `ApplyOrderBy`, `ApplyOrderByDescending`, `ApplyPaging`, and `ApplyAsNoTracking`.
+- **ISpecification&lt;TId, TAggregate&gt;**: Contract for criteria, includes (expression and string), order by, take/skip, and AsNoTracking.
+- **Specification&lt;TId, TAggregate&gt;**: Base class to define specifications with `AddInclude`, `ApplyOrderBy`, `ApplyOrderByDescending`, `ApplyPaging`, and `ApplyAsNoTracking`.
 - **Expression combinators**: `And` and `Or` extension methods to combine predicate expressions.
 - **TrueSpecification / FalseSpecification**: Constant specifications for always-true or always-false criteria.
 

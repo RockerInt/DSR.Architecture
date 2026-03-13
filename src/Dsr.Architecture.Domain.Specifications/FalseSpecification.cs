@@ -3,10 +3,10 @@ using Dsr.Architecture.Domain.Aggregates;
 namespace Dsr.Architecture.Domain.Specifications;
 
 /// <summary>
-/// A specification that initially returns false.
-/// This specification can be combined with other specifications using the And or Or methods to create a more complex specification.
+/// A specification that always evaluates to false.
+/// Useful as a starting point for combining multiple specifications using OR.
 /// </summary>
-/// <typeparam name="TId">The type of the identifier.</typeparam>
+/// <typeparam name="TId">The type of the aggregate identifier.</typeparam>
 /// <typeparam name="TAggregate">The type of the aggregate to be filtered.</typeparam>
 public class FalseSpecification<TId, TAggregate>() : Specification<TId, TAggregate>(x => false)
     where TAggregate : IAggregateRoot<TId>
