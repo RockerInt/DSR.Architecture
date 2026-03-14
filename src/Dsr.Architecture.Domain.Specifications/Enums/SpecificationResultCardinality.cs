@@ -1,4 +1,4 @@
-namespace Dsr.Architecture.Domain.Specifications;
+namespace Dsr.Architecture.Domain.Specifications.Enums;
 
 /// <summary>
 /// Defines the expected cardinality of a specification result.
@@ -28,5 +28,10 @@ public enum SpecificationResultCardinality
     /// <summary>
     /// The result is expected to be a single entity, or null if none are found; an exception is thrown if more than one are found.
     /// </summary>
-    SingleOrDefault
+    SingleOrDefault,
+    
+    /// <summary>
+    /// The result is expected to be a scalar value (e.g., count, sum, average) rather than an entity or collection of entities.
+    /// </summary>
+    Scalar
 }

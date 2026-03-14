@@ -1,7 +1,8 @@
 using System.Linq.Expressions;
 using Dsr.Architecture.Domain.Aggregates;
+using Dsr.Architecture.Domain.Specifications.Enums;
 
-namespace Dsr.Architecture.Domain.Specifications;
+namespace Dsr.Architecture.Domain.Specifications.Interfaces;
 
 /// <summary>
 /// Defines a specification interface for querying aggregates. 

@@ -1,6 +1,8 @@
 using System.Linq.Expressions;
 using Dsr.Architecture.Domain.Aggregates;
+using Dsr.Architecture.Domain.Specifications.Enums;
 using Dsr.Architecture.Domain.Specifications.Extensions;
+using Dsr.Architecture.Domain.Specifications.Interfaces;
 
 namespace Dsr.Architecture.Domain.Specifications;
 
