@@ -1,6 +1,6 @@
 using Dsr.Architecture.Domain.Aggregates;
 using Dsr.Architecture.Domain.Result;
-using Dsr.Architecture.Domain.Specifications;
+using Dsr.Architecture.Domain.Specifications.Interfaces;
 using System.Linq.Expressions;
 
 namespace Dsr.Architecture.Persistence.Abstractions;
@@ -25,7 +25,7 @@ public interface IReadRepository<TId, TAggregate>
     Result<IEnumerable<TAggregate>> List(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
-    /// Retrieves and projects aggregates that match the specified filter expression to a different type.
+    /// Retrieves and projects aggregates that match the specified specification to a different type.
     /// </summary>
     /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
     /// <param name="specification">The specification to filter the aggregates.</param>
@@ -36,11 +36,11 @@ public interface IReadRepository<TId, TAggregate>
         Expression<Func<TAggregate, TProjected>> projection);
 
     /// <summary>
-    /// Finds the first aggregate that matches the given filter expression.
+    /// Finds the individual aggregate based on the SpecificationResultCardinality(First, FirstOrDefault, Single, SingleOrDefault) that matches the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
     /// <returns>A <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
-    Result<TAggregate> First(ISpecification<TId, TAggregate> specification);
+    Result<TAggregate> Get(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
     /// Retrieves an aggregate by its unique identifier.
@@ -68,16 +68,17 @@ public interface IReadRepository<TId, TAggregate>
     #region Async
 
     /// <summary>
-    /// Asynchronously retrieves aggregates that match the specified filter expression.
+    /// Asynchronously retrieves aggregates that match the specified specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TAggregate}}"/> with a collection of matching aggregates.</returns>
     Task<Result<IEnumerable<TAggregate>>> ListAsync(
-        ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
+        ISpecification<TId, TAggregate> specification, 
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously retrieves and projects aggregates that match the specified filter expression to a different type.
+    /// Asynchronously retrieves and projects aggregates that match the specified specification to a different type.
     /// </summary>
     /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
     /// <param name="specification">The specification to filter the aggregates.</param>
@@ -86,15 +87,16 @@ public interface IReadRepository<TId, TAggregate>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TProjected}}"/> with a collection of projected aggregates.</returns>
     Task<Result<IEnumerable<TProjected>>> ListAsync<TProjected>(
         ISpecification<TId, TAggregate> specification,
-        Expression<Func<TAggregate, TProjected>> projection, CancellationToken cancellationToken = default);
+        Expression<Func<TAggregate, TProjected>> projection, 
+        CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously finds the first aggregate that matches the given filter expression.
+    /// Asynchronously finds the aggregate that matches the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
-    Task<Result<TAggregate>> FirstAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
+    Task<Result<TAggregate>> GetAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously retrieves an aggregate by its unique identifier.
