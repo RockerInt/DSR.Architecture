@@ -6,12 +6,12 @@ using Dsr.Architecture.Domain.Specifications.Interfaces;
 namespace Dsr.Architecture.Domain.Specifications;
 
 /// <summary>
-/// Abstract base class for analytics specifications that provide grouping, aggregation, and projection capabilities.
+/// Base class for analytics specifications that provide grouping, aggregation, and projection capabilities.
 /// </summary>
 /// <typeparam name="TId">The type of the aggregate identifier.</typeparam>
 /// <typeparam name="TAggregate">The type of the aggregate to be analyzed.</typeparam>
-public abstract class AnalyticsSpecification<TId, TAggregate>
-    : Specification<TId, TAggregate>, IAnalyticsSpecification<TId, TAggregate>
+public class AnalyticsSpecification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? criteria = null)
+    : Specification<TId, TAggregate>(criteria), IAnalyticsSpecification<TId, TAggregate>, ISpecification<TId, TAggregate>
     where TAggregate : IAggregateRoot<TId>
     where TId : IEquatable<TId>, IComparable<TId>
 {
