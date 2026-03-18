@@ -1,8 +1,6 @@
 using Dsr.Architecture.Domain.Aggregates;
-using Dsr.Architecture.Domain.Entities;
 using Dsr.Architecture.Domain.Result;
-using Dsr.Architecture.Domain.Specifications;
-using System.Linq.Expressions;
+using Dsr.Architecture.Domain.Specifications.Interfaces;
 
 namespace Dsr.Architecture.Persistence.Abstractions;
 
