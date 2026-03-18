@@ -50,18 +50,26 @@ public interface IReadRepository<TId, TAggregate>
     Result<TAggregate> GetById(TId id);
 
     /// <summary>
+    /// Retrieves a scalar value based on the given specification.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{T}"/> with the retrieved scalar value.</returns>
+    Result<T> GetScalar<T>(ISpecification<TId, TAggregate> specification) where T : struct;
+
+    /// <summary>
     /// Checks if any aggregate matches the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
     /// <returns>True if at least one aggregate matches; otherwise, false.</returns>
-    bool Any(ISpecification<TId, TAggregate> specification);
+    Result<bool> Any(ISpecification<TId, TAggregate> specification);
 
     /// <summary>
     /// Counts the number of aggregates that match the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
     /// <returns>The total number of matching aggregates.</returns>
-    int Count(ISpecification<TId, TAggregate> specification);
+    Result<int> Count(ISpecification<TId, TAggregate> specification);
 
     #endregion Sync
 
@@ -105,6 +113,31 @@ public interface IReadRepository<TId, TAggregate>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the retrieved aggregate.</returns>
     Task<Result<TAggregate>> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously retrieves a scalar value based on the given specification.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved scalar value.</returns>
+    Task<Result<T>> GetScalarAsync<T>(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) where T : struct;
+
+    /// <summary>
+    /// Asynchronously checks if any aggregate matches the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    Task<Result<bool>> AnyAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Asynchronously counts the number of aggregates that match the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    Task<Result<int>> CountAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     #endregion Async
 }
