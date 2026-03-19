@@ -15,6 +15,8 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
     where TAggregate : IAggregateRoot<TId>
     where TId : IEquatable<TId>, IComparable<TId>
 {
+    #region Properties
+
     /// <summary>
     /// Gets or sets the criteria of the specification. It is used to filter the aggregates.
     /// </summary>
@@ -33,12 +35,12 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
     /// <summary>
     /// Gets the primary ordering expression for the specification.
     /// </summary>
-    public Expression<Func<TAggregate, object>>? OrderBy { get; protected set; }
+    public Expression<Func<TAggregate, object>>? OrderByExpression { get; protected set; }
 
     /// <summary>
     /// Gets the primary descending ordering expression for the specification.
     /// </summary>
-    public Expression<Func<TAggregate, object>>? OrderByDescending { get; protected set; }
+    public Expression<Func<TAggregate, object>>? OrderByDescendingExpression { get; protected set; }
 
     /// <summary>
     /// Gets the number of records to return (Take).
@@ -54,19 +56,23 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
     /// Gets a value indicating whether the query should be executed without change tracking.
     /// Defaults to true.
     /// </summary>
-    public bool AsNoTracking { get; protected set; } = true;
+    public bool NoTracking { get; protected set; } = true;
 
 
     /// <summary>
     /// Gets a value indicating whether the query should be executed as a split query.
     /// </summary>
-    public bool AsSplitQuery { get; protected set; }
+    public bool SplitQuery { get; protected set; }
 
     /// <summary>
     /// Gets the expected cardinality of the specification result.
     /// Defaults to <see cref="SpecificationResultCardinality.List"/>.
     /// </summary>
-    public SpecificationResultCardinality Cardinality { get; protected set; } = SpecificationResultCardinality.List;
+    public SpecificationResultCardinality SpecCardinality { get; protected set; } = SpecificationResultCardinality.List;
+
+    #endregion Properties
+
+    #region Properties Methods
 
     /// <summary>
     /// Checks if the specification is satisfied by a specific aggregate instance.
@@ -86,29 +92,35 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
     /// Adds an include expression to the specification.
     /// </summary>
     /// <param name="include">The include expression to add.</param>
-    public void AddInclude(Expression<Func<TAggregate, object>> include)
-        => Includes.Add(include);
+    public ISpecification<TId, TAggregate> AddInclude(Expression<Func<TAggregate, object>> include)
+    {
+        Includes.Add(include);
+        return this;
+    }
 
     /// <summary>
     /// Adds an include string to the specification.
     /// </summary>
     /// <param name="includeString">The include string to add.</param>
-    public void AddInclude(string includeString)
-        => IncludeStrings.Add(includeString);
+    public ISpecification<TId, TAggregate> AddInclude(string includeString)
+    {
+        IncludeStrings.Add(includeString);
+        return this;
+    }
 
     /// <summary>
     /// Applies an ordering expression to the specification.
     /// </summary>
     /// <param name="orderBy">The ordering expression to apply.</param>
-    public void ApplyOrderBy(Expression<Func<TAggregate, object>> orderBy)
-        => OrderBy = orderBy;
+    public void ApplyOrder(Expression<Func<TAggregate, object>> orderBy)
+        => OrderByExpression = orderBy;
 
     /// <summary>
     /// Applies a descending ordering expression to the specification.
     /// </summary>
     /// <param name="orderByDesc">The descending ordering expression to apply.</param>
-    public void ApplyOrderByDescending(Expression<Func<TAggregate, object>> orderByDesc)
-        => OrderByDescending = orderByDesc;
+    public void ApplyOrderDescending(Expression<Func<TAggregate, object>> orderByDesc)
+        => OrderByDescendingExpression = orderByDesc;
 
     /// <summary>
     /// Applies paging parameters (Skip and Take) to the specification.
@@ -134,23 +146,104 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
     }
 
     /// <summary>
-    /// Configures the specification to use no tracking for the query.
-    /// </summary>
-    public void ApplyAsNoTracking()
-        => AsNoTracking = true;
-
-    /// <summary>    
-    /// Configures the specification to use a split query.
-    /// </summary>
-    public void ApplySplitQuery()
-        => AsSplitQuery = true;
-
-    /// <summary>
     /// Applies the expected cardinality for the specification result.
     /// </summary>
     /// <param name="cardinality">The expected cardinality (List, Single, First, etc.).</param>
     public void ApplyCardinality(SpecificationResultCardinality cardinality)
-        => Cardinality = cardinality;
+        => SpecCardinality = cardinality;
+
+    /// <summary>
+    /// Asing a criteria expression to the specification. 
+    /// </summary>
+    /// <param name="criteria">The criteria expression to asing.</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> Where(Expression<Func<TAggregate, bool>> criteria)
+    {
+        Criteria = criteria;
+        return this;
+    }
+
+    /// <summary>
+    /// Asing an ordering expression to the specification.
+    /// </summary>
+    /// <param name="orderBy">The ordering expression to asing.</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> OrderBy(Expression<Func<TAggregate, object>> orderBy)
+    {
+        ApplyOrder(orderBy);
+        return this;
+    }
+
+    /// <summary>
+    /// Asing a descending ordering expression to the specification.
+    /// </summary>
+    /// <param name="orderByDesc">The descending ordering expression to asing.</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> OrderByDescending(Expression<Func<TAggregate, object>> orderByDesc)
+    {
+        ApplyOrderDescending(orderByDesc);
+        return this;
+    }
+
+    /// <summary>
+    /// Asing the paging parameters (Skip and Take) to the specification.
+    /// </summary>
+    /// <param name="skip">The number of records to skip.</param>
+    /// <param name="take">The number of records to take.</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> Paging(int skip, int take)
+    {
+        ApplyPaging(skip, take);
+        return this;
+    }
+
+    /// <summary>
+    /// Asing the paging parameters based on page number and page size.
+    /// Pages start from 1.
+    /// </summary>
+    /// <param name="page">The page number (1-based).</param>
+    /// <param name="pageSize">The number of records per page.</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> PagingPerPages(int page, int pageSize)
+    {
+        ApplyPagingPerPages(page, pageSize);
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the specification to use no tracking for the query.
+    /// </summary>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> AsNoTracking()
+    {
+        NoTracking = true;
+        return this;
+    }
+
+    /// <summary>    
+    /// Configures the specification to use a split query.
+    /// </summary>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> AsSplitQuery()
+    {
+        SplitQuery = true;
+        return this;
+    }
+
+    /// <summary>
+    /// Asing the expected cardinality for the specification result.
+    /// </summary>
+    /// <param name="cardinality">The expected cardinality (List, Single, First, etc.).</param>
+    /// <returns>Self specification</returns>
+    public ISpecification<TId, TAggregate> Cardinality(SpecificationResultCardinality cardinality)
+    {
+        ApplyCardinality(cardinality);
+        return this;
+    }
+
+    #endregion Properties Methods
+
+    #region Operations
 
     /// <summary>
     /// Clones all properties of the given specification into the current instance, excluding the criteria.
@@ -162,11 +255,11 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
         Includes.AddRange(specification.Includes);
         IncludeStrings.AddRange(specification.IncludeStrings);
 
-        if (specification.OrderBy != null)
-            OrderBy = specification.OrderBy;
+        if (specification.OrderByExpression != null)
+            OrderByExpression = specification.OrderByExpression;
 
-        if (specification.OrderByDescending != null)
-            OrderByDescending = specification.OrderByDescending;
+        if (specification.OrderByDescendingExpression != null)
+            OrderByDescendingExpression = specification.OrderByDescendingExpression;
 
         if (specification.Take.HasValue)
             Take = specification.Take;
@@ -174,13 +267,13 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
         if (specification.Skip.HasValue)
             Skip = specification.Skip;
 
-        if (specification.AsNoTracking)
-            AsNoTracking = true;
+        if (specification.NoTracking)
+            NoTracking = true;
 
-        if (specification.AsSplitQuery)
-            AsSplitQuery = true;
+        if (specification.SplitQuery)
+            SplitQuery = true;
 
-        Cardinality = specification.Cardinality;
+        SpecCardinality = specification.SpecCardinality;
 
         return this;
     }
@@ -233,4 +326,6 @@ public class Specification<TId, TAggregate>(Expression<Func<TAggregate, bool>>? 
 
         return newSpec;
     }
+
+    #endregion Operations
 }

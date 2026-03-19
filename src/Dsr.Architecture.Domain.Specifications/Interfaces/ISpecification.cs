@@ -32,12 +32,12 @@ public interface ISpecification<TId, TAggregate>
     /// <summary>
     /// Gets the primary ordering expression for the query.
     /// </summary>
-    Expression<Func<TAggregate, object>>? OrderBy { get; }
+    Expression<Func<TAggregate, object>>? OrderByExpression { get; }
 
     /// <summary>
     /// Gets the primary descending ordering expression for the query.
     /// </summary>
-    Expression<Func<TAggregate, object>>? OrderByDescending { get; }
+    Expression<Func<TAggregate, object>>? OrderByDescendingExpression{ get; }
 
     /// <summary>
     /// Gets the number of records to return (Take).
@@ -52,17 +52,17 @@ public interface ISpecification<TId, TAggregate>
     /// <summary>
     /// Gets a value indicating whether the query should be executed without change tracking.
     /// </summary>
-    bool AsNoTracking { get; }
+    bool NoTracking { get; }
 
     /// <summary>
     /// Gets a value indicating whether the query should be executed as a split query.
     /// </summary>
-    bool AsSplitQuery { get; }
+    bool SplitQuery { get; }
 
     /// <summary>
     /// Gets the expected cardinality of the specification result (e.g., List, Single, First).
     /// </summary>
-    SpecificationResultCardinality Cardinality { get; }
+    SpecificationResultCardinality SpecCardinality { get; }
 
     /// <summary>
     /// Checks if the specification is satisfied by a specific aggregate instance.
@@ -70,4 +70,75 @@ public interface ISpecification<TId, TAggregate>
     /// <param name="aggregate">The aggregate instance to check.</param>
     /// <returns>True if the aggregate satisfies the criteria; otherwise, false.</returns>
     bool IsSatisfiedBy(TAggregate aggregate);
+
+    /// <summary>
+    /// Asing a criteria expression to the specification. 
+    /// </summary>
+    /// <param name="criteria">The criteria expression to asing.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> Where(Expression<Func<TAggregate, bool>> criteria);
+
+    /// <summary>
+    /// Adds an include expression to the specification.
+    /// </summary>
+    /// <param name="include">The include expression to add.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> AddInclude(Expression<Func<TAggregate, object>> include);
+
+    /// <summary>
+    /// Adds an include string to the specification.
+    /// </summary>
+    /// <param name="includeString">The include string to add.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> AddInclude(string includeString);
+
+    /// <summary>
+    /// Asing an ordering expression to the specification.
+    /// </summary>
+    /// <param name="orderBy">The ordering expression to asing.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> OrderBy(Expression<Func<TAggregate, object>> orderBy);
+
+    /// <summary>
+    /// Asing a descending ordering expression to the specification.
+    /// </summary>
+    /// <param name="orderByDesc">The descending ordering expression to asing.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> OrderByDescending(Expression<Func<TAggregate, object>> orderByDesc);
+
+    /// <summary>
+    /// Asing the paging parameters (Skip and Take) to the specification.
+    /// </summary>
+    /// <param name="skip">The number of records to skip.</param>
+    /// <param name="take">The number of records to take.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> Paging(int skip, int take);
+
+    /// <summary>
+    /// Asing the paging parameters based on page number and page size.
+    /// Pages start from 1.
+    /// </summary>
+    /// <param name="page">The page number (1-based).</param>
+    /// <param name="pageSize">The number of records per page.</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> PagingPerPages(int page, int pageSize);
+
+    /// <summary>
+    /// Configures the specification to use no tracking for the query.
+    /// </summary>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> AsNoTracking();
+
+    /// <summary>    
+    /// Configures the specification to use a split query.
+    /// </summary>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> AsSplitQuery();
+
+    /// <summary>
+    /// Asing the expected cardinality for the specification result.
+    /// </summary>
+    /// <param name="cardinality">The expected cardinality (List, Single, First, etc.).</param>
+    /// <returns>Self specification</returns>
+    ISpecification<TId, TAggregate> Cardinality(SpecificationResultCardinality cardinality);
 }

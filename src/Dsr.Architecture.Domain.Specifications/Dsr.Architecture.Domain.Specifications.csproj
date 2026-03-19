@@ -8,14 +8,14 @@
     <Authors>Jonathan Jimenez</Authors>
     <Company>Jonathan Jimenez</Company>
     <Description>
-      Specification pattern for DSR.Architecture. Composable query specifications with criteria, includes, ordering, paging, and expression combinators for use with IQueryable (e.g. Entity Framework Core).
+      Specification pattern for DSR.Architecture. Composable query specifications with criteria, includes, ordering, paging, and expression combinators for use with diferents persistence implementations (EF, Mongo, Dapper, etc).
     </Description>
     <PackageTags>specification-pattern;query;entity-framework;architecture;modular;enterprise;dsr-architecture</PackageTags>
     <Copyright>Copyright (c) 2025 Jonathan Jimenez</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>

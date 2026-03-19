@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 ![Target Framework](https://img.shields.io/badge/.NET-10.0-512bd4?style=flat-square&logo=dotnet)
 
-Specification pattern library for the DSR.Architecture solution. Provides composable, **persistence-agnostic** query specifications with criteria, includes, ordering, paging, and tracking options. 
+Specification pattern library for the DSR.Architecture solution. Provides composable, **persistence-agnostic** query specifications with criteria, includes, ordering, paging, and tracking options.
 
 The primary goal of this library is to encapsulate query logic within the Domain layer, allowing repositories (Infrastructure layer) to execute these queries against any data source (Entity Framework Core, MongoDB, Dapper, etc.) without exposing the underlying query details or leaking implementation specifics.
 
@@ -27,7 +27,6 @@ The primary goal of this library is to encapsulate query logic within the Domain
   - `ApplyHaving`: Adds filters to grouped results.
   - `ApplyProjection`: Transforms the result into a different shape.
 - **Expression Combinators**: `And` and `Or` extension methods to combine multiple predicate expressions dynamically.
-- **TrueSpecification / FalseSpecification**: Constant specifications for always-true or always-false criteria.
 
 ## Persistence Agnostic
 

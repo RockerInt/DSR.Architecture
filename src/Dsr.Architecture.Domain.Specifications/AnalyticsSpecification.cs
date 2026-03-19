@@ -40,8 +40,35 @@ public class AnalyticsSpecification<TId, TAggregate>(Expression<Func<TAggregate,
     /// </summary>
     /// <typeparam name="TKey">The type of the grouping key.</typeparam>
     /// <param name="groupBy">The grouping expression.</param>
-    protected void ApplyGroupBy<TKey>(Expression<Func<TAggregate, TKey>> groupBy)
+    public void ApplyGroupBy<TKey>(Expression<Func<TAggregate, TKey>> groupBy)
         => GroupByExpression = groupBy;
+
+    /// <summary>
+    /// Applies a filtering expression (HAVING) to grouped results.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the grouping key.</typeparam>
+    /// <param name="having">The filtering expression for grouped results.</param>
+    public void ApplyHaving<TKey>(Expression<Func<IGrouping<TKey, TAggregate>, bool>> having)
+        => HavingExpression = having;
+
+    /// <summary>
+    /// Applies a projection expression to the query results.
+    /// </summary>
+    /// <typeparam name="TResult">The type of the projected result.</typeparam>
+    /// <param name="projection">The projection expression.</param>
+    public void ApplyProjection<TResult>(Expression<Func<object, TResult>> projection)
+        => Projection = projection;
+
+    /// <summary>
+    /// Asing a grouping expression to the specification.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the grouping key.</typeparam>
+    /// <param name="groupBy">The grouping expression.</param>
+    public IAnalyticsSpecification<TId, TAggregate> GroupBy<TKey>(Expression<Func<TAggregate, TKey>> groupBy)
+    {
+        ApplyGroupBy(groupBy);
+        return this;
+    }
 
     /// <summary>
     /// Adds an aggregation definition to the specification.
@@ -50,29 +77,38 @@ public class AnalyticsSpecification<TId, TAggregate>(Expression<Func<TAggregate,
     /// <param name="type">The type of aggregation (Sum, Count, etc.).</param>
     /// <param name="selector">The selector expression for the value to aggregate.</param>
     /// <param name="alias">An alias for the aggregated result.</param>
-    protected void AddAggregation<TValue>(
+    public IAnalyticsSpecification<TId, TAggregate> AddAggregation<TValue>(
         AggregationType type,
         Expression<Func<TAggregate, TValue>> selector,
         string alias)
-        => Aggregations.Add(
+    {
+        Aggregations.Add(
             new AggregationDefinition(
                 type,
                 selector,
-                alias));    
+                alias));
+        return this;
+    }
 
     /// <summary>
-    /// Applies a filtering expression (HAVING) to grouped results.
+    /// Asing a filtering expression (HAVING) to grouped results.
     /// </summary>
     /// <typeparam name="TKey">The type of the grouping key.</typeparam>
     /// <param name="having">The filtering expression for grouped results.</param>
-    protected void ApplyHaving<TKey>(Expression<Func<IGrouping<TKey, TAggregate>, bool>> having)
-        => HavingExpression = having;
+    public IAnalyticsSpecification<TId, TAggregate> Having<TKey>(Expression<Func<IGrouping<TKey, TAggregate>, bool>> having)
+    {
+        ApplyHaving(having);
+        return this;
+    }
 
     /// <summary>
-    /// Applies a projection expression to the query results.
+    /// Asing a projection expression to the query results.
     /// </summary>
     /// <typeparam name="TResult">The type of the projected result.</typeparam>
     /// <param name="projection">The projection expression.</param>
-    protected void ApplyProjection<TResult>(Expression<Func<object, TResult>> projection)
-        => Projection = projection;
+    public IAnalyticsSpecification<TId, TAggregate> Select<TResult>(Expression<Func<object, TResult>> projection)
+    {
+        ApplyProjection(projection);
+        return this;
+    }
 }
