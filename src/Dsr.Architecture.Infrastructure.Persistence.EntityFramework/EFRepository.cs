@@ -1,7 +1,8 @@
 ﻿using Dsr.Architecture.Domain.Aggregates;
 using Dsr.Architecture.Domain.Result;
+using Dsr.Architecture.Domain.Specifications.Interfaces;
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Interfaces;
 using Dsr.Architecture.Persistence.Abstractions;
-using Dsr.Architecture.Utilities.TryCatch;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -10,49 +11,52 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 
 /// <summary>
 /// Repository implementation for managing aggregates using Entity Framework Core.
-/// This repository provides methods for querying and modifying aggregate entities in the database.
-/// It uses a DbContext to perform database operations and includes error handling with logging.
+/// This repository acts as a composite wrapper, delegating read operations to <see cref="ReadEFRepository{TContext, TId, TAggregate}"/>
+/// and write operations to <see cref="WriteEFRepository{TContext, TId, TAggregate}"/>.
 /// </summary>
-/// <typeparam name="TContext"></typeparam>
-/// <typeparam name="TId"></typeparam>
-/// <typeparam name="TAggregate"></typeparam>
+/// <typeparam name="TContext">The type of the DbContext.</typeparam>
+/// <typeparam name="TId">The type of the aggregate's unique identifier.</typeparam>
+/// <typeparam name="TAggregate">The type of the aggregate managed by this repository.</typeparam>
 public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId, TAggregate>, IReadRepository<TId, TAggregate>, IWriteRepository<TId, TAggregate>
     where TContext : DbContext
     where TId : IEquatable<TId>, IComparable<TId>
     where TAggregate : AggregateRoot<TId>, IAggregateRoot<TId>
 {
-    private readonly DbContext _context;
-    private readonly DbSet<TAggregate> _dbSet;
-    private readonly IQueryable<TAggregate> _dbSetReadOnly;
-    private readonly ILogger<EFRepository<TContext, TId, TAggregate>> _logger;
+    private readonly ReadEFRepository<TContext, TId, TAggregate> _readRepository; 
+    private readonly WriteEFRepository<TContext, TId, TAggregate> _writeRepository;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EFRepository{TContext, TId, TAggregate}"/> class with the specified DbContext and logger.
+    /// Initializes a new instance of the <see cref="EFRepository{TContext, TId, TAggregate}"/> class with the specified unit of work, specification executor, and loggers.
     /// </summary>
-    /// <param name="unitOfWork"></param>
-    /// <param name="logger"></param>
-    public EFRepository(IUnitOfWork<TContext> unitOfWork, ILogger<EFRepository<TContext, TId, TAggregate>> logger)
+    /// <param name="unitOfWork">The unit of work containing the DbContext.</param>
+    /// <param name="executor">The executor for compiled specifications.</param>
+    /// <param name="loggerReader">The logger for the read repository.</param>
+    /// <param name="loggerWriter">The logger for the write repository.</param>
+    public EFRepository(
+        IUnitOfWork<TContext> unitOfWork, 
+        ICompiledSpecificationExecutor executor, 
+        ILogger<ReadEFRepository<TContext, TId, TAggregate>> loggerReader,
+        ILogger<WriteEFRepository<TContext, TId, TAggregate>> loggerWriter)
     {
-        _context = unitOfWork.Context;
-        _dbSet = unitOfWork.Context.Set<TAggregate>();
-        _dbSetReadOnly = unitOfWork.Context.Set<TAggregate>().AsNoTracking();
-        _logger = logger;
+        _readRepository = new ReadEFRepository<TContext, TId, TAggregate> (unitOfWork, executor, loggerReader);
+        _writeRepository = new WriteEFRepository<TContext, TId, TAggregate> (unitOfWork, loggerWriter);
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EFRepository{TContext, TId, TAggregate}"/> class with the specified transactional unit of work and logger.
+    /// Initializes a new instance of the <see cref="EFRepository{TContext, TId, TAggregate}"/> class with the specified transactional unit of work, specification executor, and loggers.
     /// </summary>
-    /// <param name="unitOfWork"></param>
-    /// <param name="logger"></param>
-    /// <exception cref="InvalidOperationException"></exception>
-    public EFRepository(ITransactionalEFUnitOfWork unitOfWork, ILogger<EFRepository<TContext, TId, TAggregate>> logger)
+    /// <param name="unitOfWork">The transactional unit of work containing the DbContexts.</param>
+    /// <param name="executor">The executor for compiled specifications.</param>
+    /// <param name="loggerReader">The logger for the read repository.</param>
+    /// <param name="loggerWriter">The logger for the write repository.</param>
+    public EFRepository(
+        ITransactionalEFUnitOfWork unitOfWork, 
+        ICompiledSpecificationExecutor executor, 
+        ILogger<ReadEFRepository<TContext, TId, TAggregate>> loggerReader,
+        ILogger<WriteEFRepository<TContext, TId, TAggregate>> loggerWriter)
     {
-        _context = unitOfWork.Accessor.DbContexts.FirstOrDefault(
-            x => x is TContext) ?? throw new InvalidOperationException($"No DbContext of type {typeof(TContext).Name} found in the unit of work."
-        );
-        _dbSet = _context.Set<TAggregate>();
-        _dbSetReadOnly = _context.Set<TAggregate>().AsNoTracking();
-        _logger = logger;
+        _readRepository = new ReadEFRepository<TContext, TId, TAggregate> (unitOfWork, executor, loggerReader);
+        _writeRepository = new WriteEFRepository<TContext, TId, TAggregate> (unitOfWork, loggerWriter);
     }
 
     #region Search
@@ -60,130 +64,135 @@ public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId,
     #region Sync
 
     /// <summary>
-    /// Returns the entity set as an <see cref="IQueryable{TAggregate}"/>.
+    /// Retrieves all aggregates that match the specified specification.
     /// </summary>
-    /// <returns>An <see cref="IQueryable{TAggregate}"/> that can be used to query the entities.</returns>
-    public IQueryable<TAggregate> AsQueryable() => _dbSetReadOnly;
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{IEnumerable{TAggregate}}"/> with a collection of matching aggregates.</returns>
+    public Result<IEnumerable<TAggregate>> List(ISpecification<TId, TAggregate> specification) => _readRepository.List(specification);
 
     /// <summary>
-    /// Retrieves all entities from the repository.
+    /// Retrieves and projects aggregates that match the specified specification to a different type.
     /// </summary>
-    /// <returns>A <see cref="Result{T}"/> with a collection of all entities.</returns>
-    public Result<IEnumerable<TAggregate>> GetAll() => GetAllAsync().GetAwaiter().GetResult();
+    /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="projection">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
+    /// <returns>A <see cref="Result{IEnumerable{TProjected}}"/> with a collection of projected aggregates.</returns>
+    public Result<IEnumerable<TProjected>> List<TProjected>(
+        ISpecification<TId, TAggregate> specification,
+        Expression<Func<TAggregate, TProjected>> projection) 
+        => _readRepository.List(specification, projection);
 
     /// <summary>
-    /// Retrieves entities that match the specified filter expression.
+    /// Finds the individual aggregate based on the SpecificationResultCardinality(First, FirstOrDefault, Single, SingleOrDefault) that matches the given specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
-    /// <returns>A <see cref="Result{T}"/> with a collection of matching entities.</returns>
-    public Result<IEnumerable<TAggregate>> GetBy(Expression<Func<TAggregate, bool>> filterExpression) => GetByAsync(filterExpression).GetAwaiter().GetResult();
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    public Result<TAggregate> Get(ISpecification<TId, TAggregate> specification) => _readRepository.Get(specification);
 
     /// <summary>
-    /// Retrieves and projects entities that match the specified filter expression to a different type.
+    /// Retrieves an aggregate by its unique identifier.
     /// </summary>
-    /// <typeparam name="TProjected">The type to project the entities to.</typeparam>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
-    /// <param name="projectionExpression">An expression to project the filtered entities to <typeparamref name="TProjected"/>.</param>
-    /// <returns>A <see cref="Result{T}"/> with a collection of projected entities.</returns>
-    public Result<IEnumerable<TProjected>> GetBy<TProjected>(Expression<Func<TAggregate, bool>> filterExpression, Expression<Func<TAggregate, TProjected>> projectionExpression) =>
-        GetByAsync(filterExpression, projectionExpression).GetAwaiter().GetResult();
+    /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
+    /// <returns>A <see cref="Result{TAggregate}"/> with the retrieved aggregate.</returns>
+    public Result<TAggregate> GetById(TId id) => _readRepository.GetById(id);
 
     /// <summary>
-    /// Finds the first entity that matches the given filter expression.
+    /// Retrieves a scalar value based on the given specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
-    /// <returns>A <see cref="Result{T}"/> with the first matching entity.</returns>
-    public Result<TAggregate> First(Expression<Func<TAggregate, bool>> filterExpression) => FirstAsync(filterExpression).GetAwaiter().GetResult();
+    /// <typeparam name="T">The type of the scalar value.</typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>A <see cref="Result{T}"/> with the retrieved scalar value.</returns>
+    public Result<T> GetScalar<T>(ISpecification<TId, TAggregate> specification) where T : struct => _readRepository.GetScalar<T>(specification);
 
     /// <summary>
-    /// Retrieves an entity by its unique identifier.
+    /// Checks if any aggregate matches the given specification.
     /// </summary>
-    /// <param name="id">The unique identifier of the entity to retrieve.</param>
-    /// <returns>A <see cref="Result{T}"/> with the retrieved entity.</returns>
-    public Result<TAggregate> GetById(TId id) => GetByIdAsync(id).GetAwaiter().GetResult();
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>True if at least one aggregate matches; otherwise, false.</returns>
+    public Result<bool> Any(ISpecification<TId, TAggregate> specification) => _readRepository.Any(specification);
 
-    #endregion
+    /// <summary>
+    /// Counts the number of aggregates that match the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <returns>The total number of matching aggregates.</returns>
+    public Result<int> Count(ISpecification<TId, TAggregate> specification) => _readRepository.Count(specification);
+
+    #endregion Sync
 
     #region Async
 
     /// <summary>
-    /// Asynchronously retrieves all entities from the repository.
+    /// Asynchronously retrieves aggregates that match the specified specification.
     /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of all entities.</returns>
-    public async Task<Result<IEnumerable<TAggregate>>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<IEnumerable<TAggregate>>(await _dbSetReadOnly.ToListAsync(cancellationToken)))
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while retrieving all entities.");
-                return await Task.FromResult(Result<IEnumerable<TAggregate>>.Error(error.Message));
-            })
-            .Apply() ?? Result<IEnumerable<TAggregate>>.Error("An error occurred while retrieving all entities.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TAggregate}}"/> with a collection of matching aggregates.</returns>
+    public Task<Result<IEnumerable<TAggregate>>> ListAsync(
+        ISpecification<TId, TAggregate> specification, 
+        CancellationToken cancellationToken = default) 
+        => _readRepository.ListAsync(specification, cancellationToken);
 
     /// <summary>
-    /// Asynchronously retrieves entities that match the specified filter expression.
+    /// Asynchronously retrieves and projects aggregates that match the specified specification to a different type.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <typeparam name="TProjected">The type to project the aggregates to.</typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="projection">An expression to project the filtered aggregates to <typeparamref name="TProjected"/>.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of matching entities.</returns>
-    public async Task<Result<IEnumerable<TAggregate>>> GetByAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<IEnumerable<TAggregate>>(await _dbSetReadOnly.Where(filterExpression).ToListAsync(cancellationToken)))
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while retrieving entities by filter expression.");
-                return await Task.FromResult(Result<IEnumerable<TAggregate>>.Error(error.Message));
-            })
-            .Apply() ?? Result<IEnumerable<TAggregate>>.Error("An error occurred while retrieving entities by filter expression.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{IEnumerable{TProjected}}"/> with a collection of projected aggregates.</returns>
+    public Task<Result<IEnumerable<TProjected>>> ListAsync<TProjected>(
+        ISpecification<TId, TAggregate> specification,
+        Expression<Func<TAggregate, TProjected>> projection, 
+        CancellationToken cancellationToken = default) 
+        => _readRepository.ListAsync(specification, projection, cancellationToken);
 
     /// <summary>
-    /// Asynchronously retrieves and projects entities that match the specified filter expression to a different type.
+    /// Asynchronously finds the aggregate that matches the given specification.
     /// </summary>
-    /// <typeparam name="TProjected">The type to project the entities to.</typeparam>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
-    /// <param name="projectionExpression">An expression to project the filtered entities to <typeparamref name="TProjected"/>.</param>
+    /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with a collection of projected entities.</returns>
-    public async Task<Result<IEnumerable<TProjected>>> GetByAsync<TProjected>(Expression<Func<TAggregate, bool>> filterExpression, Expression<Func<TAggregate, TProjected>> projectionExpression, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<IEnumerable<TProjected>>(
-            await _dbSetReadOnly.Where(filterExpression).Select(projectionExpression).ToListAsync(cancellationToken)))
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while retrieving and projecting entities by filter expression.");
-                return await Task.FromResult(Result<IEnumerable<TProjected>>.Error(error.Message));
-            })
-            .Apply() ?? Result<IEnumerable<TProjected>>.Error("An error occurred while retrieving and projecting entities by filter expression.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the first matching aggregate.</returns>
+    public Task<Result<TAggregate>> GetAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
+        => _readRepository.GetAsync(specification, cancellationToken);
 
     /// <summary>
-    /// Asynchronously finds the first entity that matches the given filter expression.
+    /// Asynchronously retrieves an aggregate by its unique identifier.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities.</param>
+    /// <param name="id">The unique identifier of the aggregate to retrieve.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the first matching entity.</returns>
-    public async Task<Result<TAggregate>> FirstAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<TAggregate>(await _dbSetReadOnly.FirstOrDefaultAsync(filterExpression, cancellationToken)))
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while retrieving the first entity by filter expression.");
-                return await Task.FromResult(Result<TAggregate>.Error(error.Message));
-            })
-            .Apply() ?? Result<TAggregate>.Error("An error occurred while retrieving the first entity by filter expression.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the retrieved aggregate.</returns>
+    public Task<Result<TAggregate>> GetByIdAsync(TId id, CancellationToken cancellationToken = default) 
+        => _readRepository.GetByIdAsync(id, cancellationToken);
 
     /// <summary>
-    /// Asynchronously retrieves an entity by its unique identifier.
+    /// Asynchronously retrieves a scalar value based on the given specification.
     /// </summary>
-    /// <param name="id">The unique identifier of the entity to retrieve.</param>
+    /// <typeparam name="T">The type of the scalar value.</typeparam>
+    /// <param name="specification">The specification to filter the aggregates.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved entity.</returns>
-    public async Task<Result<TAggregate>> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<TAggregate>(await _dbSet.FindAsync([id], cancellationToken)))
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while retrieving the entity by ID.");
-                return await Task.FromResult(Result<TAggregate>.Error(error.Message));
-            })
-            .Apply() ?? Result<TAggregate>.Error("An error occurred while retrieving the entity by ID.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{T}"/> with the retrieved scalar value.</returns>
+    public Task<Result<T>> GetScalarAsync<T>(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) where T : struct => _readRepository.GetScalarAsync<T>(specification, cancellationToken);
 
-    #endregion
+    /// <summary>
+    /// Asynchronously checks if any aggregate matches the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{bool}"/> indicating if a match was found.</returns>
+    public Task<Result<bool>> AnyAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
+        => _readRepository.AnyAsync(specification, cancellationToken);
+    
+    /// <summary>
+    /// Asynchronously counts the number of aggregates that match the given specification.
+    /// </summary>
+    /// <param name="specification">The specification to filter the aggregates.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{int}"/> with the count of matching aggregates.</returns>
+    public Task<Result<int>> CountAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
+        => _readRepository.CountAsync(specification, cancellationToken);
+
+    #endregion Async
 
     #endregion
 
@@ -192,195 +201,106 @@ public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId,
     #region Sync
 
     /// <summary>
-    /// Adds a new entity to the repository.
+    /// Adds a new aggregate to the repository.
     /// </summary>
-    /// <param name="entity">The entity to be added.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result Add(TAggregate entity) => AddAsync(entity).GetAwaiter().GetResult();
+    /// <param name="aggregate">The aggregate to be added.</param>
+    /// <returns>A <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    public Result<TAggregate> Add(TAggregate aggregate) => _writeRepository.Add(aggregate);
 
     /// <summary>
-    /// Adds multiple new entities to the repository.
+    /// Adds multiple new aggregates to the repository.
     /// </summary>
-    /// <param name="entities">A collection of entities to be added.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result AddRange(ICollection<TAggregate> entities) => AddRangeAsync(entities).GetAwaiter().GetResult();
+    /// <param name="aggregates">A collection of aggregates to be added.</param>
+    /// <returns>A <see cref="Result{ICollection{TAggregate}}"/> indicating the outcome.</returns>
+    public Result<ICollection<TAggregate>> AddRange(ICollection<TAggregate> aggregates) => _writeRepository.AddRange(aggregates);
 
     /// <summary>
-    /// Updates an existing entity in the repository.
+    /// Updates an existing aggregate in the repository.
     /// </summary>
-    /// <param name="entity">The entity to be updated.</param>
-    /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result Update(TAggregate entity) => UpdateAsync(entity).GetAwaiter().GetResult();
+    /// <param name="aggregate">The aggregate to be updated.</param>
+    /// <returns>A <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    public Result<TAggregate> Update(TAggregate aggregate) => _writeRepository.Update(aggregate);
 
     /// <summary>
-    /// Removes entities from the repository based on a filter expression.
+    /// Removes aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result Remove(Expression<Func<TAggregate, bool>> filterExpression) => RemoveAsync(filterExpression).GetAwaiter().GetResult();
+    public Result Remove(ISpecification<TId, TAggregate> specification) => _writeRepository.Remove(specification);
 
     /// <summary>
-    /// Removes an entity from the repository by its unique identifier.
+    /// Removes an aggregate from the repository by its unique identifier.
     /// </summary>
-    /// <param name="id">The unique identifier of the entity to be removed.</param>
+    /// <param name="id">The unique identifier of the aggregate to be removed.</param>
     /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result RemoveById(TId id) => RemoveByIdAsync(id).GetAwaiter().GetResult();
+    public Result RemoveById(TId id) => _writeRepository.RemoveById(id);
 
     /// <summary>
-    /// Removes multiple entities from the repository based on a filter expression.
+    /// Removes multiple aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <returns>A <see cref="Result"/> indicating the outcome.</returns>
-    public Result RemoveRange(Expression<Func<TAggregate, bool>> filterExpression) => RemoveRangeAsync(filterExpression).GetAwaiter().GetResult();
+    public Result RemoveRange(ISpecification<TId, TAggregate> specification) => _writeRepository.RemoveRange(specification);
 
-    #endregion
+    #endregion Sync
 
     #region Async
 
     /// <summary>
-    /// Asynchronously adds a new entity to the repository.
+    /// Asynchronously adds a new aggregate to the repository.
     /// </summary>
-    /// <param name="entity">The entity to be added.</param>
+    /// <param name="aggregate">The aggregate to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> AddAsync(TAggregate entity, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-            {
-                if (entity is null)
-                    return Result.Invalid(new Error() { Message = "Entity cannot be null." });
-                await _dbSet.AddAsync(entity, cancellationToken);
-                return Result.Success();
-            })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while adding the entity.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while adding the entity.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    public Task<Result<TAggregate>> AddAsync(TAggregate aggregate, CancellationToken cancellationToken = default) 
+        => _writeRepository.AddAsync(aggregate, cancellationToken);
 
     /// <summary>
-    /// Asynchronously adds multiple new entities to the repository.
+    /// Asynchronously adds multiple new aggregates to the repository.
     /// </summary>
-    /// <param name="entities">A collection of entities to be added.</param>
+    /// <param name="aggregates">A collection of aggregates to be added.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> AddRangeAsync(ICollection<TAggregate> entities, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-            {
-                if (entities is null || entities.Count == 0)
-                    return Result.Invalid(new Error() { Message = "Entities collection cannot be null or empty." });
-                await _dbSet.AddRangeAsync(entities, cancellationToken);
-                return Result.Success();
-            })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while adding the entities.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while adding the entities.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{ICollection{TAggregate}}"/> indicating the outcome.</returns>
+    public Task<Result<ICollection<TAggregate>>> AddRangeAsync(ICollection<TAggregate> aggregates, CancellationToken cancellationToken = default) 
+        => _writeRepository.AddRangeAsync(aggregates, cancellationToken);
 
     /// <summary>
-    /// Asynchronously updates an existing entity in the repository.
+    /// Asynchronously updates an existing aggregate in the repository.
     /// </summary>
-    /// <param name="entity">The entity to be updated.</param>
+    /// <param name="aggregate">The aggregate to be updated.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> UpdateAsync(TAggregate entity, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-        {
-            if (entity is null)
-                return Result.Invalid(new Error() { Message = "Entity cannot be null." });
-            if (entity.Id is null)
-                return Result.Invalid(new Error() { Message = "Entity ID cannot be null." });
-            if (!await _dbSet.AnyAsync(e => e.Id!.Equals(entity.Id), cancellationToken))
-                return Result.Invalid(new Error() { Message = "Entity not found in the database." });
-
-            _context.Entry(entity).State = EntityState.Modified;
-            return Result.Success();
-        })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while updating the entity.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while updating the entity.");
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> indicating the outcome.</returns>
+    public Task<Result<TAggregate>> UpdateAsync(TAggregate aggregate, CancellationToken cancellationToken = default) 
+        => _writeRepository.UpdateAsync(aggregate, cancellationToken);
 
     /// <summary>
-    /// Asynchronously removes entities from the repository based on a filter expression.
+    /// Asynchronously removes aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> RemoveAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-            {
-                if (filterExpression is null)
-                    return Result.Invalid(new Error() { Message = "Filter expression cannot be null." });
-
-                var entity = await _dbSet.FirstOrDefaultAsync(filterExpression, cancellationToken);
-                if (entity != null)
-                    _dbSet.Remove(entity);
-
-                return Result.Success();
-            })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while removing the entity by filter expression.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while removing the entity by filter expression.");
+    public Task<Result> RemoveAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
+        => _writeRepository.RemoveAsync(specification, cancellationToken);
 
     /// <summary>
-    /// Asynchronously removes an entity from the repository by its unique identifier.
+    /// Asynchronously removes an aggregate from the repository by its unique identifier.
     /// </summary>
-    /// <param name="id">The unique identifier of the entity to be removed.</param>
+    /// <param name="id">The unique identifier of the aggregate to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> RemoveByIdAsync(TId id, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-        {
-            if (id is null)
-                return Result.Invalid(new Error() { Message = "ID cannot be null." });
-
-            var entity = await _dbSet.FindAsync([id], cancellationToken);
-            if (entity != null)
-                _dbSet.Remove(entity);
-
-            return Result.Success();
-        })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while removing the entity by ID.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while removing the entity by ID.");
+    public Task<Result> RemoveByIdAsync(TId id, CancellationToken cancellationToken = default) 
+        => _writeRepository.RemoveByIdAsync(id, cancellationToken);
 
     /// <summary>
-    /// Asynchronously removes multiple entities from the repository based on a filter expression.
+    /// Asynchronously removes multiple aggregates from the repository based on a specification.
     /// </summary>
-    /// <param name="filterExpression">An expression to filter the entities to be removed.</param>
+    /// <param name="specification">The specification to filter the aggregates to be removed.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result"/> indicating the outcome.</returns>
-    public async Task<Result> RemoveRangeAsync(Expression<Func<TAggregate, bool>> filterExpression, CancellationToken cancellationToken = default)
-        => await this.Try(async () =>
-        {
-            if (filterExpression is null)
-                return Result.Invalid(new Error() { Message = "Filter expression cannot be null." });
+    public Task<Result> RemoveRangeAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
+        => _writeRepository.RemoveRangeAsync(specification, cancellationToken);
 
-            var entities = await _dbSet.Where(filterExpression).ToListAsync(cancellationToken);
-            if (entities is not null && entities.Count != 0)
-                _dbSet.RemoveRange(entities);
-
-            return Result.Success();
-        })
-            .Catch(async (error) =>
-            {
-                _logger.LogError(error, "An error occurred while removing entities by filter expression.");
-                return await Task.FromResult(Result.Error(error.Message));
-            })
-            .Apply() ?? Result.Error("An error occurred while removing entities by filter expression.");
-
-    #endregion
+    #endregion Async
 
     #endregion
 }

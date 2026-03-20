@@ -5,11 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 
 /// <summary>
-/// Base class for unit of work pattern.
-/// Provides a DbContext and methods to complete transactions.
-/// Implements IDisposable to release resources.
+/// Implementation of the unit of work pattern for a specific Entity Framework DbContext.
+/// This class provides a coordinated way to manage transactions and save changes for a single DbContext.
 /// </summary>
-/// <param name="context"></param>
+/// <typeparam name="TContext">The type of the DbContext managed by this unit of work.</typeparam>
 public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext>
     where TContext : DbContext
 {
@@ -22,6 +21,11 @@ public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext>
     /// </summary>
     public TContext Context => _context;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnitOfWork{TContext}"/> class.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider used to resolve the DbContext.</param>
+    /// <param name="factory">An optional DbContext factory to create a new context instance.</param>
     public UnitOfWork(
         IServiceProvider serviceProvider,
         IDbContextFactory<TContext>? factory = null)
@@ -37,15 +41,14 @@ public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext>
     /// Asynchronously commits changes to the database.
     /// This method saves all changes made in this context to the underlying database.
     /// It is typically called at the end of a unit of work to persist changes.
-    /// If no changes are made, it will return 0.
     /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, containing the number of state entries written to the database.</returns>
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => await Context.SaveChangesAsync(cancellationToken);
     
     /// <summary>
-    /// Disposes the Unit of Work and its resources.
+    /// Disposes the Unit of Work and releases the underlying DbContext resources.
     /// </summary>
     public void Dispose()
     {

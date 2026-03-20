@@ -14,7 +14,7 @@ public interface IDbContextAccessor
     /// <summary>
     /// Gets an existing DbContext of the specified type or creates a new one if it does not exist.
     /// </summary>
-    /// <typeparam name="TContext"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="TContext">The type of the DbContext to get or add.</typeparam>
+    /// <returns>The DbContext instance of type <typeparamref name="TContext"/>.</returns>
     TContext GetOrAdd<TContext>() where TContext : DbContext;
 }

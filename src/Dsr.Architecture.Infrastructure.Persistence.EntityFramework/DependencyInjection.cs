@@ -1,3 +1,5 @@
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries;
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Interfaces;
 using Dsr.Architecture.Persistence.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,13 +12,27 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 public static class DependencyInjection
 {
     /// <summary>
+    /// Adds compiled query services to the specified IServiceCollection.
+    /// This method registers the CompiledQueryCache, SpecificationComplexityAnalyzer, and AutoCompiledSpecificationExecutor 
+    /// as singleton services for managing and executing compiled queries based on specifications.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddCompiledQueriesPersistence(this IServiceCollection services)
+        => services.AddSingleton<CompiledQueryCache>()
+                   .AddSingleton<SpecificationAnalysisCache>()
+                   .AddSingleton<ISpecificationComplexityAnalyzer, SpecificationComplexityAnalyzer>()
+                   .AddSingleton<ICompiledSpecificationExecutor, AutoCompiledSpecificationExecutor>();
+
+
+    /// <summary>
     /// Adds EntityFramework persistence services to the specified IServiceCollection.
     /// This method registers the UnitOfWork and repository implementations for the specified DbContext type.
     /// </summary>
     /// <typeparam name="TContext"></typeparam>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static IServiceCollection AddFullPersistence<TContext>(
+    public static IServiceCollection AddUnifiedPersistence<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder>? options = null)
         where TContext : DbContext
@@ -30,6 +46,14 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Adds read-only EntityFramework persistence services to the specified IServiceCollection.
+    /// This method registers the UnitOfWork and read-only repository implementations for the specified DbContext type.
+    /// </summary>
+    /// <typeparam name="TContext">The type of the DbContext.</typeparam>
+    /// <param name="services">The IServiceCollection to add the services to.</param>
+    /// <param name="options">Optional configuration for the DbContext.</param>
+    /// <returns>The modified IServiceCollection.</returns>
     public static IServiceCollection AddReadOnlyPersistence<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder>? options = null)
@@ -43,6 +67,15 @@ public static class DependencyInjection
 
         return services;
     }
+
+    /// <summary>
+    /// Adds write-only EntityFramework persistence services to the specified IServiceCollection.
+    /// This method registers the UnitOfWork and write-only repository implementations for the specified DbContext type.
+    /// </summary>
+    /// <typeparam name="TContext">The type of the DbContext.</typeparam>
+    /// <param name="services">The IServiceCollection to add the services to.</param>
+    /// <param name="options">Optional configuration for the DbContext.</param>
+    /// <returns>The modified IServiceCollection.</returns>
     public static IServiceCollection AddWritePersistence<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder>? options = null)
@@ -70,17 +103,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         Action<DbContextOptionsBuilder> options)
         where TContext : DbContext
-    {
-        services.AddDbContext<TContext>(options);
-
-        services.AddScoped(provider =>
-        {
-            var accessor = provider.GetRequiredService<IDbContextAccessor>();
-            return accessor.GetOrAdd<TContext>();
-        });
-
-        return services;
-    }
+        => services.AddDbContext<TContext>(options)
+                   .AddScoped(provider =>
+                   {
+                        var accessor = provider.GetRequiredService<IDbContextAccessor>();
+                        return accessor.GetOrAdd<TContext>();
+                   });
 
     /// <summary>
     /// Adds a multi-context unit of work implementation to the specified IServiceCollection.

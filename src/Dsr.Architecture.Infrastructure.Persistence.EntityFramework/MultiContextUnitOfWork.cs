@@ -5,17 +5,28 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 
 /// <summary>
-/// Base class for unit of work pattern.
-/// Provides a DbContext and methods to complete transactions.
-/// Implements IDisposable to release resources.
+/// Implementation of a multi-context unit of work pattern.
+/// This class enables managing transactions across multiple DbContext instances using the IDbContextAccessor.
+/// It ensures that operations performed across different contexts are part of the same transaction when possible.
 /// </summary>
-/// <param name="context"></param>
+/// <param name="accessor">The DbContext accessor to manage multiple contexts.</param>
 public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITransactionalEFUnitOfWork
 {   
     private readonly IDbContextAccessor _accessor = accessor;
 
+    /// <summary>
+    /// Gets the DbContext accessor associated with this unit of work.
+    /// </summary>
     public IDbContextAccessor Accessor => _accessor;
 
+    /// <summary>
+    /// Executes a series of operations within a shared transaction across all tracked DbContexts.
+    /// This method uses the first registered DbContext to start a transaction and then joins other contexts to it.
+    /// </summary>
+    /// <param name="operation">The operation to execute within the transaction.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if no DbContexts are registered.</exception>
     public async Task ExecuteInTransactionAsync(
         Func<CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
@@ -38,7 +49,7 @@ public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITra
             {
                 var dbTransaction = transaction.GetDbTransaction();
 
-                // Compartir transacción
+                // Share transaction
                 foreach (var context in contexts.Skip(1))
                 {
                     await context.Database.UseTransactionAsync(dbTransaction, cancellationToken);
@@ -46,7 +57,7 @@ public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITra
 
                 await operation(cancellationToken);
 
-                // Guardar todos dinámicamente
+                // Save all dynamically
                 foreach (var context in contexts)
                 {
                     await context.SaveChangesAsync(cancellationToken);
@@ -62,6 +73,11 @@ public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITra
         });
     }
 
+    /// <summary>
+    /// Asynchronously saves changes made in all tracked DbContexts to the database.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, containing the total number of state entries written to the database.</returns>
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var total = 0;
@@ -75,7 +91,7 @@ public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITra
     }
 
     /// <summary>
-    /// Disposes the Unit of Work and its resources.
+    /// Disposes all tracked DbContext instances and releases resources.
     /// </summary>
     public void Dispose()
     {

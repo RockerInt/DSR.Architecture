@@ -4,7 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 
 /// <summary>
-/// Defines an interface for accessing DbContext instances within the application.
+/// Scoped implementation of IDbContextAccessor.
+/// This class tracks DbContext instances within a specific service scope.
 /// </summary>
 public class ScopedDbContextAccessor(IServiceProvider serviceProvider) : IDbContextAccessor
 {
@@ -12,15 +13,15 @@ public class ScopedDbContextAccessor(IServiceProvider serviceProvider) : IDbCont
     private readonly List<DbContext> _dbContexts = [];
 
     /// <summary>
-    /// Gets a read-only collection of DbContext instances that are currently being tracked by the application.
+    /// Gets a read-only collection of DbContext instances that are currently being tracked by the application within the current scope.
     /// </summary>
     public IReadOnlyCollection<DbContext> DbContexts => _dbContexts;
 
     /// <summary>
-    /// Gets an existing DbContext of the specified type or creates a new one if it does not exist.
+    /// Gets an existing DbContext of the specified type or creates a new one if it does not exist, and starts tracking it.
     /// </summary>
-    /// <typeparam name="TContext"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="TContext">The type of the DbContext to get or add.</typeparam>
+    /// <returns>The DbContext instance of type <typeparamref name="TContext"/>.</returns>
     public TContext GetOrAdd<TContext>() where TContext : DbContext
     {
         var context = _serviceProvider.GetRequiredService<TContext>();
