@@ -36,6 +36,13 @@ public interface IReadRepository<TId, TAggregate>
         Expression<Func<TAggregate, TProjected>> projection);
 
     /// <summary>
+    /// Retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <returns>A <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    Result<IEnumerable<dynamic>> ListDynamic(ISpecification<TId, TAggregate> specification);
+
+    /// <summary>
     /// Finds the individual aggregate based on the SpecificationResultCardinality(First, FirstOrDefault, Single, SingleOrDefault) that matches the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
@@ -97,6 +104,14 @@ public interface IReadRepository<TId, TAggregate>
         ISpecification<TId, TAggregate> specification,
         Expression<Func<TAggregate, TProjected>> projection, 
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    Task<Result<IEnumerable<dynamic>>> ListDynamicAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously finds the aggregate that matches the given specification.
