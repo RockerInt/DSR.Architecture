@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Dsr.Architecture.Domain.Aggregates;
-using Dsr.Architecture.Domain.Specifications;
 using Dsr.Architecture.Domain.Specifications.Interfaces;
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Analytics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Extensions;
@@ -105,4 +105,51 @@ public static class SpecificationQueryBuilder
         where TAggregate : AggregateRoot<TId>, IAggregateRoot<TId>
         where TId : IEquatable<TId>, IComparable<TId>
         => query.BuildQuery(spec).Select(projection);
+
+    #region Analytics Specification Support
+
+    /// <summary>
+    /// Builds an IQueryable for analytics specifications, supporting GroupBy and Aggregations.
+    /// </summary>
+    /// <typeparam name="TId">The type of the aggregate's identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="spec">The analytics specification to apply.</param>
+    /// <returns>An IQueryable for dynamic results containing aggregated data.</returns>
+    public static IQueryable<dynamic> BuildAnalyticsQuery<TId, TAggregate>(
+        this DbContext context,
+        IAnalyticsSpecification<TId, TAggregate> spec)
+        where TAggregate : AggregateRoot<TId>, IAggregateRoot<TId>
+        where TId : IEquatable<TId>, IComparable<TId>
+        => context.Set<TAggregate>().BuildAnalyticsQuery(spec);
+
+    /// <summary>
+    /// Builds an IQueryable for analytics specifications from an existing queryable.
+    /// </summary>
+    /// <typeparam name="TId">The type of the aggregate's identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="query">The source queryable.</param>
+    /// <param name="spec">The analytics specification to apply.</param>
+    /// <returns>An IQueryable for dynamic results containing aggregated data.</returns>
+    public static IQueryable<dynamic> BuildAnalyticsQuery<TId, TAggregate>(
+        this IQueryable<TAggregate> query,
+        IAnalyticsSpecification<TId, TAggregate> spec)
+        where TAggregate : AggregateRoot<TId>, IAggregateRoot<TId>
+        where TId : IEquatable<TId>, IComparable<TId>
+        => AnalyticsQueryBuilder.BuildAnalyticsQuery(query, spec);
+
+    /// <summary>
+    /// Determines if a specification is an analytics specification with GroupBy or Aggregations.
+    /// </summary>
+    /// <typeparam name="TId">The type of the aggregate's identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="spec">The specification to check.</param>
+    /// <returns>True if the specification is an analytics specification with aggregations.</returns>
+    public static bool IsAnalyticsSpecification<TId, TAggregate>(this ISpecification<TId, TAggregate> spec)
+        where TAggregate : IAggregateRoot<TId>
+        where TId : IEquatable<TId>, IComparable<TId>
+        => spec is IAnalyticsSpecification<TId, TAggregate> analyticsSpec
+           && analyticsSpec.Aggregations.Count > 0;
+
+    #endregion Analytics Specification Support
 }

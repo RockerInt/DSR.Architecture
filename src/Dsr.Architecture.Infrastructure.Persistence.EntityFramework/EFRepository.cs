@@ -17,7 +17,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 /// <typeparam name="TContext">The type of the DbContext.</typeparam>
 /// <typeparam name="TId">The type of the aggregate's unique identifier.</typeparam>
 /// <typeparam name="TAggregate">The type of the aggregate managed by this repository.</typeparam>
-public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId, TAggregate>, IReadRepository<TId, TAggregate>, IWriteRepository<TId, TAggregate>
+public class EFRepository<TContext, TId, TAggregate> : IRepository<TId, TAggregate>, IReadRepository<TId, TAggregate>, IWriteRepository<TId, TAggregate>
     where TContext : DbContext
     where TId : IEquatable<TId>, IComparable<TId>
     where TAggregate : AggregateRoot<TId>, IAggregateRoot<TId>
@@ -118,6 +118,14 @@ public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId,
     /// <returns>The total number of matching aggregates.</returns>
     public Result<int> Count(ISpecification<TId, TAggregate> specification) => _readRepository.Count(specification);
 
+    /// <summary>
+    /// Retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <returns>A <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    public Result<IEnumerable<dynamic>> ListDynamic(ISpecification<TId, TAggregate> specification)
+        => _readRepository.ListDynamic(specification);
+
     #endregion Sync
 
     #region Async
@@ -191,6 +199,15 @@ public abstract class EFRepository<TContext, TId, TAggregate> : IRepository<TId,
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{int}"/> with the count of matching aggregates.</returns>
     public Task<Result<int>> CountAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default) 
         => _readRepository.CountAsync(specification, cancellationToken);
+
+    /// <summary>
+    /// Asynchronously retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    public Task<Result<IEnumerable<dynamic>>> ListDynamicAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default)
+        => _readRepository.ListDynamicAsync(specification, cancellationToken);
 
     #endregion Async
 

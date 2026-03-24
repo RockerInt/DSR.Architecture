@@ -16,8 +16,8 @@ public static class DependencyInjection
     /// This method registers the CompiledQueryCache, SpecificationComplexityAnalyzer, and AutoCompiledSpecificationExecutor 
     /// as singleton services for managing and executing compiled queries based on specifications.
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The modified service collection.</returns>
     public static IServiceCollection AddCompiledQueriesPersistence(this IServiceCollection services)
         => services.AddSingleton<CompiledQueryCache>()
                    .AddSingleton<SpecificationAnalysisCache>()
@@ -29,9 +29,10 @@ public static class DependencyInjection
     /// Adds EntityFramework persistence services to the specified IServiceCollection.
     /// This method registers the UnitOfWork and repository implementations for the specified DbContext type.
     /// </summary>
-    /// <typeparam name="TContext"></typeparam>
-    /// <param name="services"></param>
-    /// <returns></returns>
+    /// <typeparam name="TContext">The type of the database context.</typeparam>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="options">Optional configuration for the database context.</param>
+    /// <returns>The modified service collection.</returns>
     public static IServiceCollection AddUnifiedPersistence<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder>? options = null)
@@ -95,10 +96,10 @@ public static class DependencyInjection
     /// This method registers the DbContext and ensures that it is tracked by the IDbContextAccessor 
     /// for use in transactions and unit of work patterns.
     /// </summary>
-    /// <typeparam name="TContext"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="options"></param>
-    /// <returns></returns>
+    /// <typeparam name="TContext">The type of the database context.</typeparam>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="options">Configuration for the database context.</param>
+    /// <returns>The modified service collection.</returns>
     public static IServiceCollection AddTrackedDbContext<TContext>(
         this IServiceCollection services,
         Action<DbContextOptionsBuilder> options)
@@ -115,8 +116,8 @@ public static class DependencyInjection
     /// This method registers repositories and the MultiContextUnitOfWork, which allows for managing transactions across
     /// multiple DbContexts using the IDbContextAccessor to access the registered contexts.
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The modified service collection.</returns>
     public static IServiceCollection AddMultiContextUnitOfWork(this IServiceCollection services)
         => services.AddScoped<ITransactionalEFUnitOfWork, MultiContextUnitOfWork>()
                    .AddScoped(typeof(IRepository<,>), typeof(EFRepository<,,>))

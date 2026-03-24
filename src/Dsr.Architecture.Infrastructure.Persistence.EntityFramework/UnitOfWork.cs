@@ -9,7 +9,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 /// This class provides a coordinated way to manage transactions and save changes for a single DbContext.
 /// </summary>
 /// <typeparam name="TContext">The type of the DbContext managed by this unit of work.</typeparam>
-public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext>
+public class UnitOfWork<TContext> : IUnitOfWork<TContext>
     where TContext : DbContext
 {
 

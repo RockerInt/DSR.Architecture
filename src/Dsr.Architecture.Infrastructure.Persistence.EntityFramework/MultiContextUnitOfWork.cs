@@ -10,7 +10,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 /// It ensures that operations performed across different contexts are part of the same transaction when possible.
 /// </summary>
 /// <param name="accessor">The DbContext accessor to manage multiple contexts.</param>
-public abstract class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITransactionalEFUnitOfWork
+public class MultiContextUnitOfWork(IDbContextAccessor accessor) : ITransactionalEFUnitOfWork
 {   
     private readonly IDbContextAccessor _accessor = accessor;
 

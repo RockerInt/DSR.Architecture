@@ -80,6 +80,13 @@ public class ReadEFRepository<TContext, TId, TAggregate> : IReadRepository<TId, 
         ListAsync(specification, projection).GetAwaiter().GetResult();
 
     /// <summary>
+    /// Retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <returns>A <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    public Result<IEnumerable<dynamic>> ListDynamic(ISpecification<TId, TAggregate> specification) => ListDynamicAsync(specification).GetAwaiter().GetResult();
+
+    /// <summary>
     /// Finds the individual aggregate based on the SpecificationResultCardinality(First, FirstOrDefault, Single, SingleOrDefault) that matches the given specification.
     /// </summary>
     /// <param name="specification">The specification to filter the aggregates.</param>
@@ -238,6 +245,22 @@ public class ReadEFRepository<TContext, TId, TAggregate> : IReadRepository<TId, 
                 return await Task.FromResult(Result<int>.Error(error.Message));
             })
             .Apply() ?? Result<int>.Error("An error occurred while counting entities that match the specification.");
+
+    /// <summary>
+    /// Asynchronously retrieves a list of dynamic results based on an analytics specification.
+    /// </summary>
+    /// <param name="specification">The analytics specification to execute.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{List{dynamic}}"/> with a list of dynamic results.</returns>
+    public async Task<Result<IEnumerable<dynamic>>> ListDynamicAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default)
+        => await this.Try(async () => new Result<IEnumerable<dynamic>>(await _executor.ExecuteDynamicAsync(_context, specification, cancellationToken)))
+            .Catch(async (error) =>
+            {
+                _logger.LogError(error, "An error occurred while retrieving dynamic entities by specification.");
+                return await Task.FromResult(Result<IEnumerable<dynamic>>.Error(error.Message));
+            })
+            .Apply() ?? Result<IEnumerable<dynamic>>.Error("An error occurred while retrieving dynamic entities by specification.");
+
 
     #endregion
 

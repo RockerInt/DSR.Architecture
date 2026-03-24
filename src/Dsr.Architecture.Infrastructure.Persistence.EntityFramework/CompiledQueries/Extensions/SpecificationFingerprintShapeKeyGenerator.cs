@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using System.Text;
 using Dsr.Architecture.Domain.Aggregates;
-using Dsr.Architecture.Domain.Specifications;
 using Dsr.Architecture.Domain.Specifications.Interfaces;
 
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Extensions;
@@ -90,6 +89,63 @@ public static class SpecificationFingerprintShapeKeyGenerator
         builder.Append("|SELECT:");
         builder.Append(hasher.ComputeHash(normalized));
         builder.Append(spec.GenerateKey());
+
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Generates a unique key for an analytics specification, including GroupBy, Aggregations, and Having.
+    /// </summary>
+    /// <typeparam name="TId">The type of the aggregate's identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate.</typeparam>
+    /// <param name="spec">The analytics specification to generate a key for.</param>
+    /// <returns>A string fingerprint representing the analytics query shape.</returns>
+    public static string GenerateAnalyticsKey<TId, TAggregate>(
+        this IAnalyticsSpecification<TId, TAggregate> spec)
+        where TAggregate : IAggregateRoot<TId>
+        where TId : IEquatable<TId>, IComparable<TId>
+    {
+        var builder = new StringBuilder();
+        var visitor = new ExpressionFingerprintVisitor();
+        var hasher = new ExpressionStructuralHasher();
+
+        builder.Append(typeof(TAggregate).FullName);
+        builder.Append("|ANALYTICS");
+
+        // Include base specification key
+        builder.Append(((ISpecification<TId, TAggregate>)spec).GenerateKey());
+
+        // GroupBy expression
+        if (spec.GroupByExpression != null)
+        {
+            var normalized = visitor.Visit(spec.GroupByExpression);
+            builder.Append("|GB:");
+            builder.Append(hasher.ComputeHash(normalized));
+        }
+
+        // Aggregations
+        foreach (var agg in spec.Aggregations)
+        {
+            builder.Append($"|AGG:{agg.Type}:{agg.Alias}:");
+            var normalized = visitor.Visit(agg.Selector);
+            builder.Append(hasher.ComputeHash(normalized));
+        }
+
+        // Having expression
+        if (spec.HavingExpression != null)
+        {
+            var normalized = visitor.Visit(spec.HavingExpression);
+            builder.Append("|HAVING:");
+            builder.Append(hasher.ComputeHash(normalized));
+        }
+
+        // Custom projection
+        if (spec.Projection != null)
+        {
+            var normalized = visitor.Visit(spec.Projection);
+            builder.Append("|PROJ:");
+            builder.Append(hasher.ComputeHash(normalized));
+        }
 
         return builder.ToString();
     }

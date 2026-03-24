@@ -7,7 +7,7 @@ namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
 /// Defines a unit of work interface for managing database transactions and operations.
 /// This interface provides methods for completing transactions and accessing the underlying DbContext.
 /// </summary>
-/// <typeparam name="TContext"></typeparam>
+/// <typeparam name="TContext">The type of the database context.</typeparam>
 public interface IUnitOfWork<TContext> : IUnitOfWork
     where TContext : DbContext
 {

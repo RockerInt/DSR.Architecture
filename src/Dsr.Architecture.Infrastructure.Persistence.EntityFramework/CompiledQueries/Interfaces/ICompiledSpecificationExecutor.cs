@@ -17,12 +17,12 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a list of dynamic objects.</returns>
     Task<List<dynamic>> ExecuteDynamicAsync<TId, TAggregate>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -33,12 +33,12 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a list of aggregates.</returns>
     Task<List<TAggregate>> ExecuteAsync<TId, TAggregate>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -49,14 +49,14 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification, and projects the results to a different type.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <typeparam name="TProjected"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="projection"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <typeparam name="TProjected">The type of the projected result.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="projection">The projection expression.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a list of projected results.</returns>
     Task<List<TProjected>> ExecuteAsync<TId, TAggregate, TProjected>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -68,12 +68,12 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a single dynamic object.</returns>
     Task<dynamic> ExecuteDynamicSingleAsync<TId, TAggregate>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -84,12 +84,12 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a single aggregate or null if not found.</returns>
     Task<TAggregate?> ExecuteSingleAsync<TId, TAggregate>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -100,14 +100,14 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification, and projects the results to a different type.
     /// </summary>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <typeparam name="TProjected"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="projection"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <typeparam name="TProjected">The type of the projected result.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="projection">The projection expression.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a single projected result.</returns>
     Task<TProjected> ExecuteSingleAsync<TId, TAggregate, TProjected>(
         DbContext context,
         ISpecification<TId, TAggregate> specification,
@@ -119,13 +119,13 @@ public interface ICompiledSpecificationExecutor
     /// <summary>
     /// Executes a specification against the provided DbContext, automatically determining whether to use a compiled query based on the complexity of the specification, and retrieves a scalar value.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TId"></typeparam>
-    /// <typeparam name="TAggregate"></typeparam>
-    /// <param name="context"></param>
-    /// <param name="specification"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">The type of the scalar result.</typeparam>
+    /// <typeparam name="TId">The type of the identifier.</typeparam>
+    /// <typeparam name="TAggregate">The type of the aggregate root.</typeparam>
+    /// <param name="context">The database context.</param>
+    /// <param name="specification">The specification to execute.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation, returning a scalar value.</returns>
     Task<T> ExecuteScalarAsync<T, TId, TAggregate>(
         DbContext context, 
         ISpecification<TId, TAggregate> specification,
