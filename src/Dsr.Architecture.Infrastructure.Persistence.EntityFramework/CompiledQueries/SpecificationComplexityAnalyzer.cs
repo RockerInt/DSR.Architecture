@@ -35,7 +35,7 @@ public sealed class SpecificationComplexityAnalyzer
         score += spec.Includes.Count * 3;
         score += spec.IncludeStrings.Count * 3;
 
-        if (spec.OrderBy != null || spec.OrderByDescending != null)
+        if (spec.OrderByExpression != null || spec.OrderByDescendingExpression != null)
             score += 2;
 
         if (spec.Skip.HasValue)

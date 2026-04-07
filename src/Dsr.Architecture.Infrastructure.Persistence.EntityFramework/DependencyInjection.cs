@@ -1,7 +1,10 @@
 using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries;
 using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.CompiledQueries.Interfaces;
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.Evaluators;
+using Dsr.Architecture.Infrastructure.Persistence.EntityFramework.Observability;
 using Dsr.Architecture.Persistence.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Dsr.Architecture.Infrastructure.Persistence.EntityFramework;
@@ -13,16 +16,83 @@ public static class DependencyInjection
 {
     /// <summary>
     /// Adds compiled query services to the specified IServiceCollection.
-    /// This method registers the CompiledQueryCache, SpecificationComplexityAnalyzer, and AutoCompiledSpecificationExecutor 
-    /// as singleton services for managing and executing compiled queries based on specifications.
+    /// Registers CompiledQueryCache, SpecificationAnalysisCache, SpecificationComplexityAnalyzer,
+    /// and AutoCompiledSpecificationExecutor wrapped in a logging decorator for observability.
+    /// Reads feature flags from configuration to enable optional features.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configuration">Optional configuration for feature flags.
+    /// Flags live under "FeatureFlags:Persistence" in config.
+    /// Environment variable overrides: PERSISTENCE_FF__USEBOUNDEDCACHE, etc.</param>
     /// <returns>The modified service collection.</returns>
-    public static IServiceCollection AddCompiledQueriesPersistence(this IServiceCollection services)
-        => services.AddSingleton<CompiledQueryCache>()
-                   .AddSingleton<SpecificationAnalysisCache>()
-                   .AddSingleton<ISpecificationComplexityAnalyzer, SpecificationComplexityAnalyzer>()
-                   .AddSingleton<ICompiledSpecificationExecutor, AutoCompiledSpecificationExecutor>();
+    public static IServiceCollection AddCompiledQueriesPersistence(
+        this IServiceCollection services,
+        IConfiguration? configuration = null)
+    {
+        var flags = ReadFeatureFlags(configuration);
+
+        services.AddSingleton(flags);
+
+        if (flags.UseBoundedCache)
+        {
+            services.AddMemoryCache(options => options.SizeLimit = 10_000);
+            services.AddSingleton<CompiledQueryCache>(sp =>
+            {
+                var boundedCache = new BoundedCompiledQueryCache(
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+                    sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BoundedCompiledQueryCache>>());
+
+                return new CompiledQueryCache(
+                    getOrAdd: boundedCache.GetOrAdd,
+                    tryGet: key =>
+                    {
+                        var found = boundedCache.TryGet(key, out var compiled);
+                        return (found, compiled);
+                    });
+            });
+        }
+        else
+        {
+            services.AddSingleton<CompiledQueryCache>();
+        }
+
+        services.AddSingleton<SpecificationAnalysisCache>()
+                .AddSingleton<ISpecificationComplexityAnalyzer, SpecificationComplexityAnalyzer>()
+                .AddScoped<ISpecificationEvaluator, SpecificationEvaluator>()
+                .AddScoped<ICompiledSpecificationExecutor>(sp =>
+                {
+                    var inner = new AutoCompiledSpecificationExecutor(
+                        sp.GetRequiredService<CompiledQueryCache>(),
+                        sp.GetRequiredService<SpecificationAnalysisCache>(),
+                        sp.GetRequiredService<ISpecificationComplexityAnalyzer>());
+                    var log = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<LoggingSpecificationExecutor>>();
+
+                    // Phase 5: Canary — use new pipeline instead of old
+                    if (flags.UseNewSpecificationEvaluator)
+                    {
+                        return new CanarySpecificationExecutor(
+                            sp.GetRequiredService<ISpecificationEvaluator>(),
+                            sp.GetRequiredService<CompiledQueryCache>(),
+                            sp.GetRequiredService<SpecificationAnalysisCache>(),
+                            sp.GetRequiredService<ISpecificationComplexityAnalyzer>());
+                    }
+
+                    // Phase 4: Shadow mode — old primary, new shadow for comparison
+                    if (flags.ShadowModeEnabled)
+                    {
+                        return new ShadowSpecificationExecutor(
+                            inner,
+                            sp.GetRequiredService<ISpecificationEvaluator>(),
+                            sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<ShadowSpecificationExecutor>>(),
+                            flags,
+                            sp);
+                    }
+
+                    return new LoggingSpecificationExecutor(inner, log);
+                });
+
+        return services;
+    }
 
 
     /// <summary>
@@ -93,7 +163,7 @@ public static class DependencyInjection
 
     /// <summary>
     /// Adds a tracked DbContext to the specified IServiceCollection.
-    /// This method registers the DbContext and ensures that it is tracked by the IDbContextAccessor 
+    /// This method registers the DbContext and ensures that it is tracked by the IDbContextAccessor
     /// for use in transactions and unit of work patterns.
     /// </summary>
     /// <typeparam name="TContext">The type of the database context.</typeparam>
@@ -123,4 +193,41 @@ public static class DependencyInjection
                    .AddScoped(typeof(IRepository<,>), typeof(EFRepository<,,>))
                    .AddScoped(typeof(IReadRepository<,>), typeof(ReadEFRepository<,,>))
                    .AddScoped(typeof(IWriteRepository<,>), typeof(WriteEFRepository<,,>));
+
+    private static PersistenceFeatureFlags ReadFeatureFlags(IConfiguration? configuration)
+    {
+        var flags = new PersistenceFeatureFlags();
+        if (configuration is null) return flags;
+
+        var section = configuration.GetSection("FeatureFlags:Persistence");
+        if (!section.Exists()) return flags;
+
+        foreach (var child in section.GetChildren())
+        {
+            switch (child.Key)
+            {
+                case "UseBoundedCache":
+                    flags.UseBoundedCache = child.Value == "true";
+                    break;
+                case "EnableCanonicalCacheKeys":
+                    flags.EnableCanonicalCacheKeys = child.Value == "true";
+                    break;
+                case "UseNewSpecificationEvaluator":
+                    flags.UseNewSpecificationEvaluator = child.Value == "true";
+                    break;
+                case "EnforceSpecCardinality":
+                    flags.EnforceSpecCardinality = child.Value == "true";
+                    break;
+                case "ShadowModeEnabled":
+                    flags.ShadowModeEnabled = child.Value == "true";
+                    break;
+                case "ShadowSampleRate":
+                    if (double.TryParse(child.Value, out var rate))
+                        flags.ShadowSampleRate = rate;
+                    break;
+            }
+        }
+
+        return flags;
+    }
 }

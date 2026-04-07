@@ -14,7 +14,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/RockerInt/DSR.Architecture</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +25,10 @@
     <PackageReference Include="Dsr.Architecture.Persistence.Abstractions" Version="1.0.7" />
     <PackageReference Include="Dsr.Architecture.TryCatch" Version="1.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dsr.Architecture.Infrastructure.Persistence.EntityFramework.Tests" />
   </ItemGroup>
 
 </Project>

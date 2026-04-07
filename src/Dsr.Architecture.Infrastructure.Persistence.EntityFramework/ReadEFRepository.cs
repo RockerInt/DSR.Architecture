@@ -166,7 +166,7 @@ public class ReadEFRepository<TContext, TId, TAggregate> : IReadRepository<TId, 
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{TAggregate}"/> with the matching aggregate.</returns>
     public async Task<Result<TAggregate>> GetAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<TAggregate>(await _executor.ExecuteAsync(_context, specification, cancellationToken).ContinueWith(t => t.Result.FirstOrDefault(), cancellationToken)))
+        => await this.Try(async () => new Result<TAggregate>(await _executor.ExecuteSingleAsync(_context, specification, cancellationToken)))
             .Catch(async (error) =>
             {
                 _logger.LogError(error, "An error occurred while retrieving the entity by specification.");
@@ -212,12 +212,14 @@ public class ReadEFRepository<TContext, TId, TAggregate> : IReadRepository<TId, 
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{bool}"/> indicating if a match was found.</returns>
     public async Task<Result<bool>> AnyAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<bool>(
-                (await _executor.ExecuteAsync(
-                    _context, 
-                    new AnalyticsSpecification<TId, TAggregate>(specification.Criteria).Paging(0, 1).AsNoTracking(),
-                    cancellationToken)
-                ).FirstOrDefault() is not null))
+        => await this.Try(async () =>
+            {
+                var query = _context.Set<TAggregate>().AsNoTracking();
+                if (specification.Criteria != null)
+                    query = query.Where(specification.Criteria);
+
+                return new Result<bool>(await query.AnyAsync(cancellationToken));
+            })
             .Catch(async (error) =>
             {
                 _logger.LogError(error, "An error occurred while checking if any entity matches the specification.");
@@ -232,13 +234,14 @@ public class ReadEFRepository<TContext, TId, TAggregate> : IReadRepository<TId, 
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation, containing a <see cref="Result{int}"/> with the count of matching aggregates.</returns>
     public async Task<Result<int>> CountAsync(ISpecification<TId, TAggregate> specification, CancellationToken cancellationToken = default)
-        => await this.Try(async () => new Result<int>(
-                await _executor.ExecuteScalarAsync<int, TId, TAggregate>(
-                    _context, 
-                    new AnalyticsSpecification<TId, TAggregate>(specification.Criteria)
-                        .AddAggregation(AggregationType.Count, x => x.Id, "Count")
-                        .AsNoTracking(),
-                    cancellationToken)))
+        => await this.Try(async () =>
+            {
+                var query = _context.Set<TAggregate>().AsNoTracking();
+                if (specification.Criteria != null)
+                    query = query.Where(specification.Criteria);
+
+                return new Result<int>(await query.CountAsync(cancellationToken));
+            })
             .Catch(async (error) =>
             {
                 _logger.LogError(error, "An error occurred while counting entities that match the specification.");

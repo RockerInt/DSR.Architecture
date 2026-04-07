@@ -10,6 +10,8 @@
 
 - **Full Persistence Support**: Concrete implementations for `IRepository`, `IReadRepository`, and `IWriteRepository`.
 - **Intelligent Compiled Queries**: Automated system that analyzes specification complexity to decide when to use EF Core compiled queries for maximum performance.
+- **Safe Incremental Rollout**: Feature-flag-based pipeline migration with shadow mode validation and canary deployment support. Zero behavioral change on deploy.
+- **SpecificationEvaluator**: New unified evaluator with cardinality enforcement (`First`, `Single`, `FirstOrDefault`, `SingleOrDefault`), direct scalar aggregation, and simplified analytics dispatch.
 - **Multi-Context Unit of Work**: Orchestrate transactions across multiple `DbContext` instances sharing the same database connection.
 - **CQRS Optimized**: Specialized `ReadEFRepository` that defaults to no-tracking for improved read performance.
 - **Result-Pattern Integration**: Seamlessly handles database operations and returns `Result<T>` or `Result` to maintain clean, exception-free application logic.
@@ -30,11 +32,28 @@
 - **`UnitOfWork<TContext>`**: Standard Unit of Work for managing a single `DbContext` lifecycle and atomic save operations.
 - **`MultiContextUnitOfWork`**: Advanced implementation for scenarios requiring atomicity across different database contexts.
 
-### Performance Engine (Auto-Compiled Queries)
+### Performance Engine
+
+**Auto-Compiled Queries (Current Pipeline):**
 
 - **`AutoCompiledSpecificationExecutor`**: The core engine that analyzes specifications, generates structural fingerprints, and caches compiled execution plans.
-- **`SpecificationComplexityAnalyzer`**: Evaluates query "shape" (includes, criteria, ordering) to ensure compiled queries are used only where they provide a measurable benefit (simple to medium complexity queries).
+- **`SpecificationComplexityAnalyzer`**: Evaluates query "shape" (includes, criteria, ordering) to ensure compiled queries are used only where they provide a measurable benefit.
 - **`CompiledQueryCache`**: A thread-safe cache for storing compiled delegates, bypassing LINQ translation overhead on subsequent executions.
+
+**New Pipeline (Feature Flag — `UseNewSpecificationEvaluator`):**
+
+- **`SpecificationEvaluator`**: Unified evaluator with cardinality-aware terminal operations, reflection-based async aggregation helpers, and simplified analytics dispatch.
+- **`ISpecificationEvaluator`**: Clean interface for the new pipeline, independent of the current `ICompiledSpecificationExecutor`.
+
+### Observability & Safety
+
+- **`BoundedCompiledQueryCache`**: IMemoryCache-backed bounded cache replaces the unbounded `ConcurrentDictionary`, preventing memory growth in long-running services.
+- **`CardinalityTelemetry`**: Tracks which `SpecCardinality` values are actually used across the system before enforcement.
+- **`LoggingSpecificationExecutor`**: Decorator wrapping any executor with structured logging for query execution.
+- **`ShadowSpecificationExecutor`**: Runs both old and new pipelines concurrently, compares results in background, always returns old pipeline result. Zero user-facing risk.
+- **`CanarySpecificationExecutor`**: Wraps the new `SpecificationEvaluator` to match the old `ICompiledSpecificationExecutor` interface. Used when `UseNewSpecificationEvaluator` is true.
+- **`TranslationGuard`**: Validates that expressions can be translated to SQL before execution.
+- **`PersistenceFeatureFlags`**: Six feature flags for controlled, incremental rollout.
 
 ## Usage & Scenarios
 
@@ -177,10 +196,43 @@ All repository operations return a `Result<T>` or `Result` object. This pattern 
 
 The library includes an **Auto-Compiled Query Engine** to bypass LINQ-to-SQL translation overhead:
 
-1. **Fingerprinting**: Generates a structural key based on the query shape (criteria, includes, ordering).
+1. **Fingerprinting**: Generates a structural key based on the query shape (criteria, includes, ordering) with constant canonicalization.
 2. **Analysis**: Evaluates if the query complexity warrants compilation.
-3. **Caching**: Stores the compiled delegate in a thread-safe cache.
+3. **Caching**: Stores the compiled delegate in a thread-safe cache (now backed by bounded `IMemoryCache` when `UseBoundedCache` flag is enabled).
 4. **Execution**: Subsequent calls with the same specification "shape" execute the compiled version directly.
+
+### Pipeline Migration Strategy
+
+The persistence layer includes a **safe, incremental rollout system** for migrating from the current `AutoCompiledSpecificationExecutor` to the new `SpecificationEvaluator`. Every change is gated behind feature flags:
+
+| Flag | Default | Effect |
+|---|---|---|
+| `ShadowModeEnabled` | `false` | Runs new pipeline in background, compares results, old pipeline returned to user |
+| `UseNewSpecificationEvaluator` | `false` | Full switch to new pipeline in production |
+| `EnforceSpecCardinality` | `false` | Enforces `First`/`Single` vs `FirstOrDefault` based on specification's `SpecCardinality` |
+| `UseBoundedCache` | `false` | Switches from unbounded `ConcurrentDictionary` to `IMemoryCache` (10,000 entry limit) |
+
+```json
+{
+  "FeatureFlags": {
+    "Persistence": {
+      "ShadowModeEnabled": "true",
+      "UseNewSpecificationEvaluator": "false",
+      "EnforceSpecCardinality": "false",
+      "UseBoundedCache": "true"
+    }
+  }
+}
+```
+
+Environment variable overrides: `PERSISTENCE_FF__SHADOWMODEENABLED=true`
+
+Rollout sequence:
+
+1. **Deploy with flags at defaults** — zero behavioral change
+2. **Enable `ShadowModeEnabled`** in staging — validate new pipeline against old results
+3. **Enable `UseNewSpecificationEvaluator`** on canary instance — deploy to single prod instance
+4. **Expand to all instances** after monitoring confirms no regressions
 
 > [!NOTE]
 > **Analytics and Compiled Queries**

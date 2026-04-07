@@ -28,4 +28,28 @@ public sealed class ExpressionFingerprintVisitor : ExpressionVisitor
 
         return replacement;
     }
+
+    /// <summary>
+    /// Replaces constant values with canonical placeholders.
+    /// This ensures structurally identical expressions produce the same cache key,
+    /// regardless of the actual constant values being filtered.
+    /// </summary>
+    protected override Expression VisitConstant(ConstantExpression node)
+    {
+        // Skip special EF constants and already-canonical constants
+        var typeName = node.Type.Name;
+        if (node.Value is null ||
+            typeName.StartsWith("CSharpImpl") ||
+            typeName.StartsWith("__") ||
+            node.Value.GetType().IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false))
+        {
+            return node;
+        }
+
+        _constIndex++;
+        var placeholder = $"__C{_constIndex}_{typeName}__";
+        return Expression.Constant(placeholder, typeof(string));
+    }
+
+    private int _constIndex = 0;
 }
