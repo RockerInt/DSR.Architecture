@@ -278,9 +278,9 @@ public static class Utilities
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                    // Intentionally swallowed — property mapping is best-effort.
                 }
             }
         }
@@ -366,9 +366,9 @@ public static class Utilities
                         }
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine(ex.Message);
+                    // Intentionally swallowed — property mapping is best-effort.
                 }
             }
         }

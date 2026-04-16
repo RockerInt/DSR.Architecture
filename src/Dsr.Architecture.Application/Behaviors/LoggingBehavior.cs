@@ -36,8 +36,8 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
         var stopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation(
-            "Handling {RequestName} {@Request}",
-            requestName, request);
+            "Handling {RequestName}",
+            requestName);
 
         var response = await next();
 
@@ -46,14 +46,14 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
         if (response is IResult result && !(response.Status is ResultStatus.Ok or ResultStatus.NoContent or ResultStatus.Created))
         {
             _logger.LogWarning(
-                "Handled {RequestName} with status {Status} in {Elapsed}ms with response {@Response}",
-                requestName, result.Status, stopwatch.ElapsedMilliseconds, response);
+                "Handled {RequestName} with status {Status} in {Elapsed}ms",
+                requestName, result.Status, stopwatch.ElapsedMilliseconds);
         }
         else
         {
             _logger.LogInformation(
-                "Handled {RequestName} successfully in {Elapsed}ms with response {@Response}",
-                requestName, stopwatch.ElapsedMilliseconds, response);
+                "Handled {RequestName} successfully in {Elapsed}ms",
+                requestName, stopwatch.ElapsedMilliseconds);
         }
 
         return response;
