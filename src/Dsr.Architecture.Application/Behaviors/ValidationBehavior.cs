@@ -1,4 +1,4 @@
-﻿using Dsr.Architecture.Application.UseCases;
+using Dsr.Architecture.Application.UseCases;
 using Dsr.Architecture.Domain.Result;
 using FluentValidation;
 using MediatR;
@@ -56,7 +56,10 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
 
         if (errors.Count != 0)
         {
-            _logger.LogError($"Validation for {typeof(TRequest).Name} with errors: {string.Join(", ", errors.Select(e => $"Property: {e.Identifier}, Error: {e.Message}"))}");
+            _logger.LogError(
+                "Validation for {RequestName} failed with {ErrorCount} error(s)",
+                typeof(TRequest).Name,
+                errors.Count);
             return (TResponse)(object)Result.Invalid(errors);
         }
 

@@ -23,6 +23,7 @@ public static class WebUtilities
     /// <param name="data">Data to be sent with the request.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Creates a new HttpClient per call, risking socket exhaustion. Use the overload that accepts an HttpClient instance instead.")]
     public async static Task<HttpResponseMessage> ConectAsync<T>(Method method, string baseAddress, string path, T data, Dictionary<string, string>? headers = null)
     {
         string httpContent = JsonConvert.SerializeObject(data);
@@ -60,6 +61,7 @@ public static class WebUtilities
     /// <param name="httpContent">Content to be sent with the request as a string.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Creates a new HttpClient per call, risking socket exhaustion. Use the overload that accepts an HttpClient instance instead.")]
     public async static Task<HttpResponseMessage> ConectAsync(Method method, string baseAddress, string path, string? httpContent, Dictionary<string, string>? headers = null)
     {
         using var client = new HttpClient { BaseAddress = new Uri(baseAddress) };
@@ -168,6 +170,7 @@ public static class WebUtilities
     /// <param name="data">Data to be sent with the request.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Sync-over-async (.Result) can deadlock and creates a new HttpClient per call. Use the async overload that accepts an HttpClient instance instead.")]
     public static HttpResponseMessage Conect<T>(Method method, string baseAddress, string path, T data, Dictionary<string, string>? headers = null)
         => ConectAsync(method, baseAddress, path, data, headers).Result;
 
@@ -180,6 +183,7 @@ public static class WebUtilities
     /// <param name="httpContent">Content to be sent with the request as a string.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Sync-over-async (.Result) can deadlock and creates a new HttpClient per call. Use the async overload that accepts an HttpClient instance instead.")]
     public static HttpResponseMessage Conect(Method method, string baseAddress, string path, string? httpContent, Dictionary<string, string>? headers = null)
         => ConectAsync(method, baseAddress, path, httpContent, headers).Result;
 
@@ -193,6 +197,7 @@ public static class WebUtilities
     /// <param name="data">Data to be sent with the request.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Sync-over-async (.Result) can deadlock. Use ConectAsync instead.")]
     public static HttpResponseMessage Conect<T>(Method method, HttpClient client, string path, T data, Dictionary<string, string>? headers = null)
         => ConectAsync(method, client, path, data, headers).Result;
 
@@ -205,6 +210,7 @@ public static class WebUtilities
     /// <param name="httpContent">Content to be sent with the request as a string.</param>
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
+    [Obsolete("Sync-over-async (.Result) can deadlock. Use ConectAsync instead.")]
     public static HttpResponseMessage Conect(Method method, HttpClient client, string path, string? httpContent, Dictionary<string, string>? headers = null)
         => ConectAsync(method, client, path, httpContent, headers).Result;
 

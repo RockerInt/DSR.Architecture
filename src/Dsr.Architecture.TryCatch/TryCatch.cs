@@ -1,9 +1,3 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Dsr.Architecture.Utilities.TryCatch;
@@ -46,9 +40,6 @@ public class TryCatch
         }
         catch (Exception ex)
         {
-            // Log the exception to the console.
-            Console.WriteLine(ex.ToString());
-
             // Execute the catch function block if it is not null.
             if (CatchFunc is not null)
                 await CatchFunc(ex);
@@ -106,9 +97,6 @@ public class TryCatch<T>
         }
         catch (Exception ex)
         {
-            // Log the exception to the console.
-            Console.WriteLine(ex.ToString());
-
             // Execute the catch function block if it is not null and capture the result.
             if (CatchFunc is not null)
                 result = await CatchFunc(ex);
@@ -127,5 +115,3 @@ public class TryCatch<T>
         return result;
     }
 }
-
-

@@ -25,8 +25,6 @@ internal sealed class ShadowSpecificationExecutor : ICompiledSpecificationExecut
     private readonly ILogger<ShadowSpecificationExecutor> _logger;
     private readonly PersistenceFeatureFlags _flags;
     private readonly IServiceProvider _serviceProvider;
-    private readonly Random _random;
-
     public ShadowSpecificationExecutor(
         ICompiledSpecificationExecutor primary,
         ISpecificationEvaluator candidate,
@@ -39,13 +37,12 @@ internal sealed class ShadowSpecificationExecutor : ICompiledSpecificationExecut
         _logger = logger;
         _flags = flags;
         _serviceProvider = serviceProvider;
-        _random = new Random();
     }
 
     private bool ShouldSample()
     {
         if (!_flags.ShadowModeEnabled) return false;
-        return _random.NextDouble() < _flags.ShadowSampleRate;
+        return Random.Shared.NextDouble() < _flags.ShadowSampleRate;
     }
 
     public async Task<List<TAggregate>> ExecuteAsync<TId, TAggregate>(
