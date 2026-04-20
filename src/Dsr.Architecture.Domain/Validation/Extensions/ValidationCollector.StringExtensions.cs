@@ -8,6 +8,30 @@ namespace Dsr.Architecture.Domain.Validation.Extensions;
 public static class ValidationCollectorStringExtensions
 {
     /// <summary>
+    /// Bounded timeout applied to every <see cref="Regex"/> evaluation performed by this
+    /// validator, as a defence-in-depth measure against ReDoS when patterns or inputs are
+    /// influenced by untrusted data.
+    /// </summary>
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
+    /// Evaluates a regular expression against the provided input using a bounded timeout.
+    /// A timeout is treated as a non-match so callers see the same validation failure they
+    /// would get for any other invalid input, rather than an unhandled exception.
+    /// </summary>
+    private static bool SafeIsMatch(string? input, string pattern)
+    {
+        try
+        {
+            return Regex.IsMatch(input ?? string.Empty, pattern, RegexOptions.None, RegexTimeout);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Validates that the provided string input has a minimum length. If the input length is less than the specified minimum length,
     /// it adds a domain error to the collection with a message indicating that the parameter must be at least the specified number of characters. 
     /// The error includes an identifier (the parameter name), a message, a code ("min_length") to categorize the error type, and metadata containing the actual input value along with the defined minimum length. 
@@ -78,7 +102,7 @@ public static class ValidationCollectorStringExtensions
     /// <param name="pattern"></param>
     /// <param name="paramName"></param>
     public static ValidationCollector Matches(this ValidationCollector validation, string input, string pattern, string paramName)
-            => validation.AddIf(!Regex.IsMatch(input ?? string.Empty, pattern), paramName,
+            => validation.AddIf(!SafeIsMatch(input, pattern), paramName,
                 $"{paramName} has an invalid format.",
                 "invalid_format",
                 ErrorType.Validation,
@@ -102,7 +126,7 @@ public static class ValidationCollectorStringExtensions
     /// <param name="input"></param>
     /// <param name="paramName"></param>
     public static ValidationCollector Email(this ValidationCollector validation, string input, string paramName)
-            => validation.AddIf(!Regex.IsMatch(input ?? string.Empty, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"), paramName,
+            => validation.AddIf(!SafeIsMatch(input, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"), paramName,
                 $"{paramName} has an invalid email format.",
                 "invalid_email_format",
                 ErrorType.Validation,
