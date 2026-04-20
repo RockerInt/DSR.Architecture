@@ -35,9 +35,12 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
         var requestName = typeof(TRequest).Name;
         var stopwatch = Stopwatch.StartNew();
 
-        _logger.LogInformation(
-            "Handling {RequestName} {@Request}",
-            requestName, request);
+        // Avoid serializing the full request at Information level — requests commonly
+        // carry credentials, tokens, or PII. Only the type name is logged here; callers
+        // that need the full payload can enable Debug-level logging for this category.
+        _logger.LogInformation("Handling {RequestName}", requestName);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Handling {RequestName} with payload {@Request}", requestName, request);
 
         var response = await next();
 
@@ -46,14 +49,22 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
         if (response is IResult result && !(response.Status is ResultStatus.Ok or ResultStatus.NoContent or ResultStatus.Created))
         {
             _logger.LogWarning(
-                "Handled {RequestName} with status {Status} in {Elapsed}ms with response {@Response}",
-                requestName, result.Status, stopwatch.ElapsedMilliseconds, response);
+                "Handled {RequestName} with status {Status} in {Elapsed}ms",
+                requestName, result.Status, stopwatch.ElapsedMilliseconds);
+            if (_logger.IsEnabled(LogLevel.Debug))
+                _logger.LogDebug(
+                    "Handled {RequestName} with status {Status} in {Elapsed}ms and response {@Response}",
+                    requestName, result.Status, stopwatch.ElapsedMilliseconds, response);
         }
         else
         {
             _logger.LogInformation(
-                "Handled {RequestName} successfully in {Elapsed}ms with response {@Response}",
-                requestName, stopwatch.ElapsedMilliseconds, response);
+                "Handled {RequestName} successfully in {Elapsed}ms",
+                requestName, stopwatch.ElapsedMilliseconds);
+            if (_logger.IsEnabled(LogLevel.Debug))
+                _logger.LogDebug(
+                    "Handled {RequestName} successfully in {Elapsed}ms with response {@Response}",
+                    requestName, stopwatch.ElapsedMilliseconds, response);
         }
 
         return response;

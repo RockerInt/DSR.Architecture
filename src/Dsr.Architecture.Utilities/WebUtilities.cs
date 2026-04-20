@@ -1,9 +1,6 @@
 ﻿using Dsr.Architecture.Utilities.Enums;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Dsr.Architecture.Utilities;
@@ -13,6 +10,71 @@ namespace Dsr.Architecture.Utilities;
 /// </summary>
 public static class WebUtilities
 {
+    private static readonly HashSet<string> ContentHeaderNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Allow",
+        "Content-Disposition",
+        "Content-Encoding",
+        "Content-Language",
+        "Content-Length",
+        "Content-Location",
+        "Content-MD5",
+        "Content-Range",
+        "Content-Type",
+        "Expires",
+        "Last-Modified"
+    };
+
+    /// <summary>
+    /// Maps a <see cref="Method"/> to the corresponding <see cref="HttpMethod"/>.
+    /// </summary>
+    private static HttpMethod ToHttpMethod(Method method) => method switch
+    {
+        Method.Get => HttpMethod.Get,
+        Method.Put => HttpMethod.Put,
+        Method.Delete => HttpMethod.Delete,
+        _ => HttpMethod.Post,
+    };
+
+    /// <summary>
+    /// Builds a per-request <see cref="HttpRequestMessage"/> with headers applied to the message itself,
+    /// so that no caller-supplied headers (including sensitive ones such as Authorization) are ever
+    /// attached to a shared <see cref="HttpClient.DefaultRequestHeaders"/> collection.
+    /// </summary>
+    private static HttpRequestMessage BuildRequest(Method method, string path, HttpContent? content, Dictionary<string, string>? headers)
+    {
+        var request = new HttpRequestMessage(ToHttpMethod(method), path);
+
+        if (content is not null)
+            request.Content = content;
+
+        if (headers is not null)
+        {
+            foreach (var entry in headers)
+            {
+                // Content headers must go on the content, not the request.
+                if (ContentHeaderNames.Contains(entry.Key))
+                {
+                    if (request.Content is not null)
+                        request.Content.Headers.TryAddWithoutValidation(entry.Key, entry.Value);
+                    continue;
+                }
+
+                request.Headers.TryAddWithoutValidation(entry.Key, entry.Value);
+            }
+        }
+
+        return request;
+    }
+
+    /// <summary>
+    /// Creates a JSON <see cref="StringContent"/> payload from a serialized string.
+    /// </summary>
+    private static StringContent? CreateJsonContent(string? httpContent)
+        => string.IsNullOrEmpty(httpContent)
+            ? null
+            : new StringContent(httpContent, Encoding.UTF8, "application/json");
+
     /// <summary>
     /// Asynchronously sends an HTTP request with the specified method, base address, path, and data.
     /// </summary>
@@ -24,32 +86,7 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public async static Task<HttpResponseMessage> ConectAsync<T>(Method method, string baseAddress, string path, T data, Dictionary<string, string>? headers = null)
-    {
-        string httpContent = JsonConvert.SerializeObject(data);
-        using var client = new HttpClient { BaseAddress = new Uri(baseAddress) };
-
-        if (headers != null)
-        {
-            foreach (var entry in headers)
-            {
-                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
-            }
-        }
-        else
-        {
-            client.DefaultRequestHeaders.Accept.Clear();
-        }
-
-        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
-
-        return method switch
-        {
-            Method.Get => await client.GetAsync(path),
-            Method.Put => await client.PutAsync(path, stringContent),
-            Method.Delete => await client.DeleteAsync(path),
-            _ => await client.PostAsync(path, stringContent),
-        };
-    }
+        => await ConectAsync(method, baseAddress, path, JsonConvert.SerializeObject(data), headers);
 
     /// <summary>
     /// Asynchronously sends an HTTP request with the specified method, base address, path, and content string.
@@ -63,28 +100,8 @@ public static class WebUtilities
     public async static Task<HttpResponseMessage> ConectAsync(Method method, string baseAddress, string path, string? httpContent, Dictionary<string, string>? headers = null)
     {
         using var client = new HttpClient { BaseAddress = new Uri(baseAddress) };
-
-        if (headers != null)
-        {
-            foreach (var entry in headers)
-            {
-                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
-            }
-        }
-        else
-        {
-            client.DefaultRequestHeaders.Accept.Clear();
-        }
-
-        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
-
-        return method switch
-        {
-            Method.Get => await client.GetAsync(path),
-            Method.Put => await client.PutAsync(path, stringContent),
-            Method.Delete => await client.DeleteAsync(path),
-            _ => await client.PostAsync(path, stringContent),
-        };
+        using var request = BuildRequest(method, path, CreateJsonContent(httpContent), headers);
+        return await client.SendAsync(request);
     }
 
     /// <summary>
@@ -98,34 +115,12 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public async static Task<HttpResponseMessage> ConectAsync<T>(Method method, HttpClient client, string path, T data, Dictionary<string, string>? headers = null)
-    {
-        string httpContent = JsonConvert.SerializeObject(data);
-
-        if (headers != null)
-        {
-            foreach (var entry in headers)
-            {
-                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
-            }
-        }
-        else
-        {
-            client.DefaultRequestHeaders.Accept.Clear();
-        }
-
-        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
-
-        return method switch
-        {
-            Method.Get => await client.GetAsync(path),
-            Method.Put => await client.PutAsync(path, stringContent),
-            Method.Delete => await client.DeleteAsync(path),
-            _ => await client.PostAsync(path, stringContent),
-        };
-    }
+        => await ConectAsync(method, client, path, JsonConvert.SerializeObject(data), headers);
 
     /// <summary>
     /// Asynchronously sends an HTTP request with the specified method, base address, path, and content string.
+    /// Headers are applied to the per-call <see cref="HttpRequestMessage"/> instead of the shared
+    /// <see cref="HttpClient.DefaultRequestHeaders"/> to avoid cross-call leakage of sensitive headers.
     /// </summary>
     /// <param name="method">HTTP method to be used.</param>
     /// <param name="client">HTTP client to be used.</param>
@@ -135,27 +130,9 @@ public static class WebUtilities
     /// <returns>HTTP response message.</returns>
     public async static Task<HttpResponseMessage> ConectAsync(Method method, HttpClient client, string path, string? httpContent, Dictionary<string, string>? headers = null)
     {
-        if (headers != null)
-        {
-            foreach (var entry in headers)
-            {
-                client.DefaultRequestHeaders.Add(entry.Key, entry.Value);
-            }
-        }
-        else
-        {
-            client.DefaultRequestHeaders.Accept.Clear();
-        }
-
-        StringContent? stringContent = !string.IsNullOrEmpty(httpContent) ? new StringContent(httpContent, Encoding.UTF8, "application/json") : null;
-
-        return method switch
-        {
-            Method.Get => await client.GetAsync(path),
-            Method.Put => await client.PutAsync(path, stringContent),
-            Method.Delete => await client.DeleteAsync(path),
-            _ => await client.PostAsync(path, stringContent),
-        };
+        ArgumentNullException.ThrowIfNull(client);
+        using var request = BuildRequest(method, path, CreateJsonContent(httpContent), headers);
+        return await client.SendAsync(request);
     }
 
     /// <summary>
@@ -169,7 +146,7 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public static HttpResponseMessage Conect<T>(Method method, string baseAddress, string path, T data, Dictionary<string, string>? headers = null)
-        => ConectAsync(method, baseAddress, path, data, headers).Result;
+        => ConectAsync(method, baseAddress, path, data, headers).GetAwaiter().GetResult();
 
     /// <summary>
     /// Synchronously sends an HTTP request with the specified method, base address, path, and content string.
@@ -181,7 +158,7 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public static HttpResponseMessage Conect(Method method, string baseAddress, string path, string? httpContent, Dictionary<string, string>? headers = null)
-        => ConectAsync(method, baseAddress, path, httpContent, headers).Result;
+        => ConectAsync(method, baseAddress, path, httpContent, headers).GetAwaiter().GetResult();
 
     /// <summary>
     /// Synchronously sends an HTTP request with the specified method, base address, path, and data.
@@ -194,7 +171,7 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public static HttpResponseMessage Conect<T>(Method method, HttpClient client, string path, T data, Dictionary<string, string>? headers = null)
-        => ConectAsync(method, client, path, data, headers).Result;
+        => ConectAsync(method, client, path, data, headers).GetAwaiter().GetResult();
 
     /// <summary>
     /// Synchronously sends an HTTP request with the specified method, base address, path, and content string.
@@ -206,56 +183,5 @@ public static class WebUtilities
     /// <param name="headers">Optional headers to be included in the request.</param>
     /// <returns>HTTP response message.</returns>
     public static HttpResponseMessage Conect(Method method, HttpClient client, string path, string? httpContent, Dictionary<string, string>? headers = null)
-        => ConectAsync(method, client, path, httpContent, headers).Result;
-
-    /// <summary>
-    /// Validates the content of an HTTP response.
-    /// </summary>
-    /// <param name="httpResponse">HTTP response to validate.</param>
-    /// <returns>Content of the response as a string.</returns>
-    public static string? ValidateContent(this HttpResponseMessage httpResponse)
-    {
-        string? resp = null;
-        if (httpResponse.Content.Headers.ContentLength > 0)
-        {
-            Stream stream = httpResponse.Content.ReadAsStreamAsync().Result;
-            StreamReader sr = new(stream);
-            resp = sr.ReadToEnd();
-        }
-        return resp;
-    }
-
-
-    /// <summary>
-    /// Maps an HTTP response to an entity of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <param name="response">HTTP response to map.</param>
-    /// <returns>Mapped entity.</returns>
-    public static T? MapResponse<T>(this HttpResponseMessage response)
-        => response.IsSuccessStatusCode
-            ? response.ValidateContent().ToEntitySimple<T>()
-            : throw HttpCallError(response);
-
-    /// <summary>
-    /// Maps an HTTP response to a list of entities of type T.
-    /// </summary>
-    /// <typeparam name="T">Type of the entity.</typeparam>
-    /// <param name="response">HTTP response to map.</param>
-    /// <returns>List of mapped entities.</returns>
-    public static List<T>? MapListResponse<T>(this HttpResponseMessage response)
-        => response.IsSuccessStatusCode
-            ? response.ValidateContent().ToEntityListSimple<T>()
-            : throw HttpCallError(response);
-
-    /// <summary>
-    /// Generates an exception based on the HTTP response.
-    /// </summary>
-    /// <param name="response">HTTP response that caused the error.</param>
-    /// <returns>Generated exception.</returns>
-    public static Exception HttpCallError(this HttpResponseMessage response)
-        => new($"StatusCode: {Convert.ToInt16(response.StatusCode)}, {Environment.NewLine} Message: {response.ValidateContent()}");
-
+        => ConectAsync(method, client, path, httpContent, headers).GetAwaiter().GetResult();
 }
-
-
