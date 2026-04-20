@@ -190,10 +190,36 @@ public static class AnalyticsQueryBuilder
         var newSelectorBody = visitor.Visit(selectorLambda.Body);
         var newSelector = Expression.Lambda(newSelectorBody!, elementParam);
 
-        var method = typeof(Enumerable).GetMethods()
-            .Where(m => m.Name == methodName)
-            .First(m => m.GetParameters().Length == 2)
-            .MakeGenericMethod(elementType);
+        var resultType = newSelector.ReturnType;
+
+        // Find the Enumerable overload whose second parameter is a Func selector.
+        // On .NET 6+, Min/Max have overloads that accept an IComparer as the second argument,
+        // so we must filter by Func<,> explicitly to avoid binding to the wrong method.
+        var candidates = typeof(Enumerable).GetMethods()
+            .Where(m => m.Name == methodName && m.IsGenericMethodDefinition)
+            .Select(m => new { Method = m, Parameters = m.GetParameters() })
+            .Where(x => x.Parameters.Length == 2
+                        && x.Parameters[1].ParameterType.IsGenericType
+                        && x.Parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(Func<,>))
+            .ToArray();
+
+        // Prefer a single-generic overload whose selector returns the exact result type
+        // (this covers Sum/Average for int/long/double/decimal/float and their nullable variants).
+        var singleGeneric = candidates.FirstOrDefault(x =>
+            x.Method.GetGenericArguments().Length == 1
+            && x.Parameters[1].ParameterType.GetGenericArguments()[1] == resultType);
+
+        MethodInfo method;
+        if (singleGeneric != null)
+        {
+            method = singleGeneric.Method.MakeGenericMethod(elementType);
+        }
+        else
+        {
+            // Fall back to the two-generic overload: Min/Max<TSource, TResult>(IEnumerable<TSource>, Func<TSource, TResult>).
+            var twoGeneric = candidates.First(x => x.Method.GetGenericArguments().Length == 2);
+            method = twoGeneric.Method.MakeGenericMethod(elementType, resultType);
+        }
 
         return Expression.Call(null, method, groupingParam, newSelector);
     }
